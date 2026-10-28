@@ -39,6 +39,8 @@ data/canon/*.parquet          ← 冻结的数据契约，所有人只读这里
     outputs/{metrics,figures,top10}  →  app/ 演示界面
 ```
 
+> 图中 `lightfm.py` / `lrurec.py` 尚未实现（进度见 §4）；`app/` 是计划中的 Streamlit 界面。
+
 **三条设计约束**（保证三个模型的数字可比）：
 
 1. 所有模型读写同一份 `data/canon/`，**不得自行切分数据**；
@@ -48,6 +50,16 @@ data/canon/*.parquet          ← 冻结的数据契约，所有人只读这里
 ---
 
 ## 3. 快速开始
+
+### 3.0 获取代码
+
+```bash
+git clone https://github.com/toulandeking/cs5481-movielens-recsys.git
+cd cs5481-movielens-recsys
+```
+
+> 仓库**只含代码与文档，不含任何数据**（许可证禁止再分发）。
+> 数据在 3.2–3.3 两步里由你自己准备，产物与其他人逐字节一致。
 
 ### 3.1 软件要求
 
@@ -65,9 +77,15 @@ data/canon/*.parquet          ← 冻结的数据契约，所有人只读这里
 python -m pip install -r requirements.txt
 ```
 
+> 上表是开发验证用的具体版本，`requirements.txt` 里写的是宽松下界，允许有差异。
+> 若 `pyarrow` 装不上，canon 会自动降级为 pickle，其余功能不受影响。
+
 ### 3.2 数据准备
 
-从 [GroupLens](https://grouplens.org/datasets/movielens/1m/) 下载 `ml-1m.zip`，解压到项目根目录：
+⚠️ **克隆下来的仓库里既没有 `ml-1m/`，也没有 `data/canon/`** —— 这是刻意的：
+ML-1M 的许可证禁止再分发数据，而 `build_canon` 完全确定，每人本地生成的产物逐字节相同。
+
+从 [GroupLens](https://grouplens.org/datasets/movielens/1m/) 下载 `ml-1m.zip`，解压到项目根目录，形成：
 
 ```
 Recommender_System/
@@ -107,6 +125,19 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 
 > 说明：Item-CF 无法直接消费性别/年龄/类型，该命令用「同群用户画像 → 伪历史 → 邻域扩散」
 > 的近似方案实现，同时作为冷启动实验的对照组。原生支持用户特征的是 LightFM。
+
+### 3.6 环境自检（新成员必做）
+
+上面 3.1–3.3 跑完后，执行这四条命令；**全部通过说明环境已就绪**，可以开始写自己的算法：
+
+| 命令 | 预期 |
+|---|---|
+| `python -m src.contract` | 打印 `N_ITEMS 3416`、`CANON_FORMAT parquet` |
+| `python -m src.build_canon --check` | 每一行都是 ✓ |
+| `python -m src.evaluate --random` | full ≈ 0.0029、candidates ≈ 0.0990 |
+| `python -m src.adapters.itemcf --eval` | full Recall@10 = **0.0641** |
+
+最后一条能复现 0.0641，说明**数据、切分、指标、模型**整条链路都与团队完全一致。
 
 ---
 
