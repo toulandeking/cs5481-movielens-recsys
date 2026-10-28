@@ -1,0 +1,217 @@
+# MovieLens 电影推荐系统
+
+> CS5481 Recommender Systems · 小组项目（方向一：Movie Recommendation）
+> 在 MovieLens-1M 上实现并对比 **三个推荐算法**，提供可交互的推荐演示。
+
+一句话：**给定一个用户，推荐他还没看过、且可能会喜欢的电影。**
+
+---
+
+## 1. 项目做什么
+
+| 项 | 内容 |
+|---|---|
+| 数据集 | MovieLens-1M（6,040 用户 / 3,416 部电影 / 999,611 条评分） |
+| 任务 | Top-N 推荐：为每个用户排出最可能喜欢的 10 部未看过的电影 |
+| 算法 | ① Item-based CF（课内）② LightFM（Reference）③ LRURec（2024 新算法） |
+| 评估 | Leave-One-Out 切分；Recall@10 / NDCG@10 / HR@10 |
+| 交付 | 技术报告 + 源码 + 本 README + 课堂演示 |
+
+评分权重：数据集信息 20% · EDA 与预处理 20% · 算法定义 30% · 推荐实现 20% · 演示 10%
+
+---
+
+## 2. 系统架构
+
+```
+ml-1m/*.dat
+    │  src/build_canon.py   （一次性：解析 → 过滤 → 重映射 → LOO 切分）
+    ▼
+data/canon/*.parquet          ← 冻结的数据契约，所有人只读这里
+    │
+    ├── src/adapters/itemcf.py    Item-based CF
+    ├── src/adapters/lightfm.py   LightFM
+    └── src/adapters/lrurec.py    LRURec
+              │  统一接口：AdapterBase.score_matrix() → (6040, 3416)
+              ▼
+    src/evaluate.py           ← 指标的唯一出口（full / candidates 两种模式）
+              ▼
+    outputs/{metrics,figures,top10}  →  app/ 演示界面
+```
+
+**三条设计约束**（保证三个模型的数字可比）：
+
+1. 所有模型读写同一份 `data/canon/`，**不得自行切分数据**；
+2. 模型只输出分数，**指标一律由 `evaluate.py` 计算**；
+3. 任何特征/统计量**只能从 `train` 计算**，用 `val` 调参，`test` 只跑一次。
+
+---
+
+## 3. 快速开始
+
+### 3.1 软件要求
+
+| 依赖 | 版本 | 用途 |
+|---|---|---|
+| Python | ≥ 3.10（开发用 3.12.8） | — |
+| pandas | 2.3.1 | 数据处理 |
+| numpy | 2.1.3 | 数值计算 |
+| scipy | 1.16.0 | 稀疏矩阵（Item-CF 相似度） |
+| pyarrow | 26.0.0 | parquet 读写（缺失时自动降级为 pickle） |
+| matplotlib | ≥ 3.7 | 结果图 |
+| lightfm / torch | 待补 | 另两个算法的负责人填写 |
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 3.2 数据准备
+
+从 [GroupLens](https://grouplens.org/datasets/movielens/1m/) 下载 `ml-1m.zip`，解压到项目根目录：
+
+```
+Recommender_System/
+├── ml-1m/
+│   ├── ratings.dat  users.dat  movies.dat  README
+```
+
+> ⚠️ 原始数据**不得提交到 git**（许可证禁止再分发）。
+
+### 3.3 生成数据集
+
+```bash
+python -m src.build_canon          # 生成 data/canon/，约 6 秒
+python -m src.build_canon --check  # 校验产物与预期一致
+python -m src.contract             # 打印当前生效的全部配置
+```
+
+### 3.4 训练与评估
+
+```bash
+# Item-CF（已完成）
+python -m src.adapters.itemcf --tune      # 在 val 上搜超参
+python -m src.adapters.itemcf --eval      # test 评估 + 导出 top-10
+python -m src.adapters.itemcf --analyze   # 错误分析表 + 两张图
+python -m src.adapters.itemcf --top --uid 42   # 查看某个用户的推荐
+
+# LightFM / LRURec：命令形式相同，见 TASKS.md
+```
+
+### 3.5 按画像推荐（演示用）
+
+模拟一个**新用户**，输入人口属性与偏好类型即可得到推荐：
+
+```bash
+python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 10 --explain
+```
+
+> 说明：Item-CF 无法直接消费性别/年龄/类型，该命令用「同群用户画像 → 伪历史 → 邻域扩散」
+> 的近似方案实现，同时作为冷启动实验的对照组。原生支持用户特征的是 LightFM。
+
+---
+
+## 4. 当前状态
+
+| 模块 | 状态 | 说明 |
+|---|---|---|
+| 数据管道（canon） | ✅ 完成 | 5 个 parquet，全量 `assert` 校验 |
+| 评估框架 | ✅ 完成 | full / candidates 双模式，含随机与爆款基线自检 |
+| 适配层基类 | ✅ 完成 | `AdapterBase` + 模型注册表 |
+| **Item-CF** | ✅ 完成 | 调参、评估、错误分析、演示导出 |
+| LightFM | ⬜ 待开始 | — |
+| LRURec | ⬜ 待开始 | — |
+| Streamlit 演示 | ⬜ 待开始 | 依赖三个模型的 `outputs/top10/*.parquet` |
+| 技术报告 | ⬜ 进行中 | 数据与 Item-CF 章节素材已就绪 |
+
+详细的任务拆分见 [TASKS.md](TASKS.md)。
+
+---
+
+## 5. 评估协议
+
+**切分**：Leave-One-Out —— 每个用户按时间排序，最后一条作 test、倒数第二条作 val、其余作 train。
+（train 987,531 / val 6,040 / test 6,040）
+
+**相关性**：所有观测到的交互均为正样本（隐式反馈协议），`rating` 数值不参与训练与评估。
+
+**两种评估模式**（必须来自同一分数矩阵）：
+
+| 模式 | 做法 | 用途 |
+|---|---|---|
+| **full** | 对全部 3,416 部电影打分排序 | **主表**，无负采样歧义 |
+| candidates | 1 正 + 100 固定负样本内排序 | 副表，对齐采用 1+99 协议的论文 |
+
+> 两种模式的绝对值**不可跨比**，报告中同时给出是为了覆盖不同的文献口径。
+
+---
+
+## 6. 结果与图表位置
+
+| 结果 | 路径 |
+|---|---|
+| Item-CF 指标（两模式） | `outputs/metrics/itemcf_test.json` |
+| Item-CF 调参记录（20 组） | `outputs/metrics/itemcf_tuning_val.csv` |
+| Item-CF 最终超参 | `outputs/metrics/itemcf_params.json` |
+| 错误分析（按目标热度分档） | `outputs/metrics/itemcf_popularity_buckets.csv` |
+| 图：超参敏感性 | `outputs/figures/itemcf_alpha_k_val.png` |
+| 图：流行度偏置 | `outputs/figures/itemcf_popularity_bias.png` |
+| 推荐结果（演示用） | `outputs/top10/itemcf.parquet` |
+
+### 当前结果（test，K=10）
+
+| 模型 | full Recall@10 | full NDCG@10 | candidates Recall@10 | candidates NDCG@10 |
+|---|---:|---:|---:|---:|
+| 随机打分 | 0.0033 | 0.0014 | 0.0990 | 0.0430 |
+| 最流行基线 | 0.0353 | 0.0173 | 0.4159 | 0.2237 |
+| **Item-CF** | **0.0641** | **0.0335** | **0.5560** | **0.3224** |
+| LightFM | — | — | — | — |
+| LRURec | — | — | — | — |
+
+---
+
+## 7. 可复现性
+
+| 项 | 值 |
+|---|---|
+| 全局随机种子 | **42**（`src/contract.py` 的 `SEED`） |
+| 子种子 | `negative_sampling` / `cold_start_split` / `model_init` 均为 42 |
+| 确定性 | 切分按 `(timestamp, MovieID)` 稳定排序；相似度截断用 stable argsort |
+| 环境 | Python 3.12.8 · pandas 2.3.1 · numpy 2.1.3 · scipy 1.16.0 · pyarrow 26.0.0 |
+| 数据切分 | 固定写入 `data/canon/`，任何人不得在脚本内重新切分 |
+
+---
+
+## 8. 数据集与引用
+
+本数据集的使用须遵守 GroupLens 的许可：**仅限研究用途，不得再分发，不得商用。**
+
+> F. Maxwell Harper and Joseph A. Konstan. 2015. **The MovieLens Datasets: History and Context.**
+> *ACM Transactions on Interactive Intelligent Systems (TiiS)* 5, 4, Article 19 (December 2015), 19 pages.
+> DOI: [10.1145/2827872](https://doi.org/10.1145/2827872)
+
+- 数据来源：<https://grouplens.org/datasets/movielens/1m/>
+- 目录中的 `ml-1m/README` 为官方说明，包含完整的字段字典与许可条款。
+
+---
+
+## 9. 文档索引
+
+| 文档 | 内容 |
+|---|---|
+| [DATA.md](DATA.md) | 数据结构、7 个坑、四项关键决策的依据、canon 规格与读取纪律 |
+| [ITEMCF.md](ITEMCF.md) | Item-CF 的算法定义、结果、三条关键发现、结果展示方案 |
+| [TASKS.md](TASKS.md) | 三人三算法的任务清单、验收标准、时间节点 |
+
+> 新增算法文档时请沿用 `ITEMCF.md` 的小节结构（状态 → 模块清单 → 算法定义 → 运行 →
+> 结果 → 发现 → 展示建议 → 局限 → 复现清单 → 变更记录）。
+
+---
+
+## 10. 已知限制
+
+- Item-CF 的命中高度集中在热门电影：目标评分数 < 100 时命中率不足 0.5%，
+  长尾与冷物品需要内容侧信息（这正是引入 LightFM 的动机）。
+- `val` 与 `test` 的难度不同（`val` 系统性偏高约 0.015），**`val` 只用于选超参，
+  报告中一律报 `test`**。
+- 全量排序下 Recall@10 的绝对值不高（~0.06），这是 3,416 部候选、单正样本的固有难度，
+  不同论文采用的切分与候选集不同，**数值不可直接横向比较**。

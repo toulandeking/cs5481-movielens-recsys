@@ -1,0 +1,24 @@
+# 统一换行符：仓库内一律存 LF，检出时按平台习惯转换
+# 避免 Windows / macOS 成员之间产生整文件的换行符变更
+* text=auto
+
+# 明确声明文本文件（防止被误判为二进制）
+*.py     text
+*.md     text
+*.txt    text
+*.json   text
+*.toml   text
+*.cfg    text
+*.yml    text
+*.yaml   text
+*.gitignore text
+
+# 二进制文件不做任何转换
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.pdf     binary
+*.zip     binary
+*.parquet binary
+*.pkl     binary
+*.npz     binary
