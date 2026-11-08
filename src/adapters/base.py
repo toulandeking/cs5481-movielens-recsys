@@ -148,8 +148,8 @@ class AdapterBase(ABC):
 # =============================================================================
 _BUILTIN: dict[str, tuple[str, str]] = {
     "itemcf": ("src.adapters.itemcf", "ItemCFAdapter"),
+    "lightfm": ("src.adapters.lightfm", "LightFMAdapter"),
     # 后续接入时在此登记：
-    # "lightfm": ("src.adapters.lightfm", "LightFMAdapter"),
     # "lrurec":  ("src.adapters.lrurec", "LRURecAdapter"),
 }
 _CUSTOM: dict[str, Callable[..., AdapterBase]] = {}

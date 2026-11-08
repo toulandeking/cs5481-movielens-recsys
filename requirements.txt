@@ -10,8 +10,13 @@ pyarrow>=15.0        # 验证版本 26.0.0  （parquet 读写；缺失时 canon 
 matplotlib>=3.7      # 验证版本 3.10.x （--analyze 出图）
 
 # ---- 算法层：各模型负责人安装后在此登记 ----
-# lightfm>=1.17      # LightFM（B 负责）—— 装完请补上验证版本
-# torch>=2.0         # LRURec（C 负责）—— 装完请补上验证版本
+# LightFM（B 负责）—— 已在 Windows 上验证版本 1.16
+#   ⚠️ 不能在 Windows 上 pip install：PyPI 只有 sdist 且本机无 MSVC；
+#      conda-forge 的 win-64 构建可用，但 1.17 有 warp/bpr 崩溃的回归（issue #720），必须用 1.16。
+#      本项目实际用「conda-forge lightfm 1.16 + 内嵌 CPython 3.9.13」，见 LIGHTFM.md §10。
+#       依赖 numpy<2（1.16 的构建约束），因此该环境里的 numpy 是 1.23.5，与上文的 >=1.26 不冲突（不同环境）
+# lightfm==1.16       # 验证版本 1.16（仅 Linux/Colab 可用 1.17+）
+# torch>=2.0          # LRURec（C 负责）—— 装完请补上验证版本
 
 # ---- 演示层（可选，做 Streamlit 时再装）----
 # streamlit>=1.30

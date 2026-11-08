@@ -112,8 +112,17 @@ python -m src.adapters.itemcf --eval      # test 评估 + 导出 top-10
 python -m src.adapters.itemcf --analyze   # 错误分析表 + 两张图
 python -m src.adapters.itemcf --top --uid 42   # 查看某个用户的推荐
 
-# LightFM / LRURec：命令形式相同，见 TASKS.md
+# LightFM（已完成）
+python -m src.adapters.lightfm --tune      # 在 val 上搜超参（20 组，约 35 分钟）
+python -m src.adapters.lightfm --eval      # test 评估 + 导出 top-10（约 3 分钟）
+python -m src.adapters.lightfm --analyze   # 错误分析表 + 两张图
+python -m src.adapters.lightfm --top --uid 42   # 查看某个用户的推荐
+
+# LRURec：命令形式相同，见 TASKS.md
 ```
+
+> ⚠️ Windows 上 LightFM 要用独立的 CPython 3.9 解释器（原因见 [LIGHTFM.md](LIGHTFM.md) §9）：
+> `& "<workspace>\.py39e\rt\python.exe" -m src.adapters.lightfm --eval`。Linux/Colab 直接 `python -m`。
 
 ### 3.5 按画像推荐（演示用）
 
@@ -149,7 +158,7 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | 评估框架 | ✅ 完成 | full / candidates 双模式，含随机与爆款基线自检 |
 | 适配层基类 | ✅ 完成 | `AdapterBase` + 模型注册表 |
 | **Item-CF** | ✅ 完成 | 调参、评估、错误分析、演示导出 |
-| LightFM | ⬜ 待开始 | — |
+| **LightFM** | ✅ 完成 | 调参、评估、错误分析、演示导出；test Recall@10 = 0.0775 |
 | LRURec | ⬜ 待开始 | — |
 | Streamlit 演示 | ⬜ 待开始 | 依赖三个模型的 `outputs/top10/*.parquet` |
 | 技术报告 | ⬜ 进行中 | 数据与 Item-CF 章节素材已就绪 |
@@ -187,6 +196,15 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | 图：超参敏感性 | `outputs/figures/itemcf_alpha_k_val.png` |
 | 图：流行度偏置 | `outputs/figures/itemcf_popularity_bias.png` |
 | 推荐结果（演示用） | `outputs/top10/itemcf.parquet` |
+| LightFM 指标（两模式） | `outputs/metrics/lightfm_test.json` |
+| LightFM 调参记录（20 组） | `outputs/metrics/lightfm_tuning_val.csv` |
+| LightFM 最终超参 | `outputs/metrics/lightfm_params.json` |
+| LightFM 错误分析（按目标热度分档） | `outputs/metrics/lightfm_popularity_buckets.csv` |
+| LightFM 图：超参/特征敏感性 | `outputs/figures/lightfm_tuning_sensitivity.png` |
+| LightFM 图：流行度偏置 | `outputs/figures/lightfm_popularity_bias.png` |
+| LightFM 推荐结果（演示用） | `outputs/top10/lightfm.parquet` |
+
+> 两个算法的全部细节见 [ITEMCF.md](ITEMCF.md) 与 [LIGHTFM.md](LIGHTFM.md)。
 
 ### 当前结果（test，K=10）
 
@@ -194,9 +212,13 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 |---|---:|---:|---:|---:|
 | 随机打分 | 0.0033 | 0.0014 | 0.0990 | 0.0430 |
 | 最流行基线 | 0.0353 | 0.0173 | 0.4159 | 0.2237 |
-| **Item-CF** | **0.0641** | **0.0335** | **0.5560** | **0.3224** |
-| LightFM | — | — | — | — |
+| Item-CF | 0.0641 | 0.0335 | 0.5560 | 0.3224 |
+| **LightFM** | **0.0775** | **0.0398** | **0.6621** | **0.3895** |
 | LRURec | — | — | — | — |
+
+> **LightFM 相对 Item-CF：full Recall@10 +20.9%、NDCG@10 +18.7%、candidates +19.1% / +20.8%。**
+> 增益集中在训练期评分数 100–1499 的中长尾影片（+36%~+56%），热门档仅 +2.6%，评分数 <100 的物品无改善 ——
+> 见 [LIGHTFM.md](LIGHTFM.md) §6 的分档对照表。
 
 ---
 
@@ -208,6 +230,7 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | 子种子 | `negative_sampling` / `cold_start_split` / `model_init` 均为 42 |
 | 确定性 | 切分按 `(timestamp, MovieID)` 稳定排序；相似度截断用 stable argsort |
 | 环境 | Python 3.12.8 · pandas 2.3.1 · numpy 2.1.3 · scipy 1.16.0 · pyarrow 26.0.0 |
+| LightFM 子环境 | 因 lightfm 在 Windows 无可用 wheel，单独用 CPython **3.9.13**（embeddable）· numpy 1.23.5 · scipy 1.10.1 · pandas 1.5.3 · pyarrow 12.0.1 · lightfm **1.16**；启动器 `<workspace>\.py39e\rt\python.exe`，详见 [LIGHTFM.md](LIGHTFM.md) §10 |
 | 数据切分 | 固定写入 `data/canon/`，任何人不得在脚本内重新切分 |
 
 ---
@@ -231,6 +254,7 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 |---|---|
 | [DATA.md](DATA.md) | 数据结构、7 个坑、四项关键决策的依据、canon 规格与读取纪律 |
 | [ITEMCF.md](ITEMCF.md) | Item-CF 的算法定义、结果、三条关键发现、结果展示方案 |
+| [LIGHTFM.md](LIGHTFM.md) | LightFM 的算法定义、WARP 动机、20 组调参、长尾分档对照、Windows 踩坑与复现清单 |
 | [TASKS.md](TASKS.md) | 三人三算法的任务清单、验收标准、时间节点 |
 
 > 新增算法文档时请沿用 `ITEMCF.md` 的小节结构（状态 → 模块清单 → 算法定义 → 运行 →
@@ -242,7 +266,11 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 
 - Item-CF 的命中高度集中在热门电影：目标评分数 < 100 时命中率不足 0.5%，
   长尾与冷物品需要内容侧信息（这正是引入 LightFM 的动机）。
+- **LightFM 缓解但没有解决这个问题**：100–1499 条评分的中长尾比 Item-CF 高 36%~56%，
+  但 < 100 条评分的物品命中率与 Item-CF 持平（0.43%），< 20 条为 0 —— 零交互物品仍不可荐。
+- **LightFM 的 `identity` 列意味着它是 hybrid MF 而非纯 content-based**（纯侧信息只有 241 种用户向量），
+  报告引用时不要把它当作纯冷启动方案的证据。
 - `val` 与 `test` 的难度不同（`val` 系统性偏高约 0.015），**`val` 只用于选超参，
   报告中一律报 `test`**。
-- 全量排序下 Recall@10 的绝对值不高（~0.06），这是 3,416 部候选、单正样本的固有难度，
+- 全量排序下 Recall@10 的绝对值不高（0.06–0.08），这是 3,416 部候选、单正样本的固有难度，
   不同论文采用的切分与候选集不同，**数值不可直接横向比较**。

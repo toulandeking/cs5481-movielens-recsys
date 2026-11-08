@@ -11,7 +11,7 @@
 | # | 算法 | 类别（作业要求） | 负责人 | 状态 | 截止 |
 |---|---|---|---|---:|---|
 | ① | **Item-based CF** | 课内讲过的算法 | **A** | ✅ **完成** | — |
-| ② | **LightFM** | Reference Algorithms | **B** | ⬜ 待开始 | 11/16 |
+| ② | **LightFM** | Reference Algorithms | **B** | ✅ **完成** | 11/16 |
 | ③ | **LRURec** | 2024–2025 新算法 | **C** | ⬜ 待开始 | 11/16 |
 
 > 作业原文要求「恰好三个算法」：一个课内、一个 Reference、一个 2024–2025 新算法。
@@ -60,46 +60,53 @@
 
 ---
 
-## 4. ② LightFM（B）
+## 4. ② LightFM（B）— ✅ 已完成
+
+> **test 结果**：full Recall@10 = **0.0775**，NDCG@10 = 0.0398；candidates 0.6621 / 0.3895。
+> 相对 Item-CF 四个指标 +18.7%~+20.9%。细节见 [LIGHTFM.md](LIGHTFM.md)。
 
 ### 4.1 任务清单
 
 **环境（W2 上半周）**
-- [ ] `python -m pip install lightfm`，版本记录到 `requirements.txt`
-- [ ] 跑通 LightFM 官方 `movielens` 快速示例（它自带玩具数据集，不依赖我们的 canon）
-- [ ] 确认能多线程训练、能在 5 分钟内跑完一次 fit
+- [x] 版本记录到 `requirements.txt` —— ⚠️ **不是 pip 装的**：PyPI 无 Windows wheel、本机无 MSVC；
+      最终用 conda-forge 的 win-64 构建 **lightfm 1.16** + 内嵌 CPython 3.9.13（`1.17` 在 Windows 上 `loss="warp"` 必崩，见 §4.2）
+- [x] 跑通 LightFM 官方 `movielens` 快速示例（自带玩具集，不依赖我们的 canon）：precision@10 = 0.0677
+- [x] 能在 5 分钟内跑完一次 fit：全量 6040×3416 训练 20 epoch 实测 **173 s**
+- [ ] ⚠️ 多线程：**做不到**（不是没试）—— lightfm 的 `setup.py` 里 `use_openmp = not darwin and not win`，
+      Windows 构建一律 no-OpenMP，导入即 `UserWarning: ... Only a single thread will be used`；
+      `num_threads=4` 已显式传入但被忽略。Linux/Colab 上同一份代码可多线程（约 60 s）
 
 **理解算法（W2 上半周）**
-- [ ] 读 Metadata Embeddings for User and Item Cold-start Recommendations（arXiv 1507.08439）
-- [ ] 弄清核心思想：用户表示 = 属性 embedding 之和，物品同理
+- [x] 读 Metadata Embeddings for User and Item Cold-start Recommendations（arXiv 1507.08439）
+- [x] 弄清核心思想：用户表示 = 属性 embedding 之和，物品同理
       $\hat r_{ui} = \big(\sum_{j\in f_u} e_j\big)^\top\big(\sum_{k\in f_i} e_k\big) + b_u + b_i$
-- [ ] 弄清 WARP loss 为什么适合隐式反馈的 top-N
+- [x] 弄清 WARP loss 为什么适合隐式反馈的 top-N（含实测证据：logistic 0.0026 < bpr 0.0119 < warp 0.0159）
 
 **实现（W2）**
-- [ ] 新建 `src/adapters/lightfm.py`，`class LightFMAdapter(AdapterBase)`，`name = "LightFM"`
-- [ ] `build_user_features()`：`gender` + `age_group` + `occupation` one-hot → CSR
-      ⚠️ **行号必须等于 `uid`，矩阵必须覆盖全部 6,040 行，缺失补全零行**
-- [ ] `build_item_features()`：18 个 genres 多热 + `year` 分桶 one-hot → CSR
-      ⚠️ **行号必须等于 `iid`，覆盖全部 3,416 行**
-- [ ] `fit()`：只用 `split == "train"`；`loss="warp"`；记录训练耗时
-- [ ] `score_matrix()`：`user_emb @ item_emb.T + user_bias + item_bias`，返回 `(6040, 3416)` float32
-- [ ] 在 `src/adapters/base.py` 的 `_BUILTIN` 里登记 `"lightfm"`
-- [ ] 用 `load_adapter("lightfm")` 能实例化并跑通 `evaluate_all()`
+- [x] 新建 `src/adapters/lightfm.py`，`class LightFMAdapter(AdapterBase)`，`name = "LightFM"`
+- [x] `build_user_features()`：`gender` + `age_group` + `occupation` one-hot → CSR
+      ⚠️ **行号必须等于 `uid`，矩阵必须覆盖全部 6,040 行，缺失补全零行**（已加 `assert` + strict 校验；实测 6040 行、无全零行）
+- [x] `build_item_features()`：18 个 genres 多热 + `year` 分桶 one-hot → CSR
+      ⚠️ **行号必须等于 `iid`，覆盖全部 3,416 行**（实测 3416 行、每行 3–8 个非零）
+- [x] `fit()`：只用 `split == "train"`；`loss="warp"`；记录训练耗时
+- [x] `score_matrix()`：`user_emb @ item_emb.T + user_bias + item_bias`，返回 `(6040, 3416)` float32
+- [x] 在 `src/adapters/base.py` 的 `_BUILTIN` 里登记 `"lightfm"`
+- [x] 用 `load_adapter("lightfm")` 能实例化并跑通 `evaluate_all()`
 
 **调参（W3 上半周，只用 val）**
-- [ ] `--tune` 子命令，网格覆盖 `no_components ∈ {16,32,64,128}`、
-      `loss ∈ {warp, bpr}`、`epochs`、`learning_rate`、`item_alpha`、`user_alpha`
-- [ ] 至少 10 组，结果写 `outputs/metrics/lightfm_tuning_val.csv`
-- [ ] 按 1-SE 规则或 argmax 选定配置，写入 params json
+- [x] `--tune` 子命令，网格覆盖 `no_components ∈ {16,32,64,128}`、
+      `loss ∈ {warp, bpr}`、`epochs`、`learning_rate`、`item_alpha`、`user_alpha`、`max_sampled`
+- [x] 至少 10 组（实跑 **20 组**），结果写 `outputs/metrics/lightfm_tuning_val.csv`
+- [x] 按 1-SE 规则选定配置（组 16：c=32·ms=100·identity），写入 `lightfm_params.json`
 
 **评估（W3）**
-- [ ] `--eval`：**test 只跑一次**，输出 `outputs/metrics/lightfm_test.json`
-- [ ] `--analyze`：错误分析表 + 2 张图（沿用 itemcf 的样式）
-- [ ] 导出 `outputs/top10/lightfm.parquet`
+- [x] `--eval`：**test 只跑一次**，输出 `outputs/metrics/lightfm_test.json`
+- [x] `--analyze`：错误分析表 + 2 张图（沿用 itemcf 的样式）
+- [x] 导出 `outputs/top10/lightfm.parquet`（60,400 行，零泄漏）
 
 **文档（W3 末）**
-- [ ] 写 `LIGHTFM.md`，沿用 `ITEMCF.md` 的小节结构
-- [ ] 把结果行填进 `README.md` §6 的主结果表
+- [x] 写 `LIGHTFM.md`，沿用 `ITEMCF.md` 的小节结构
+- [x] 把结果行填进 `README.md` §6 的主结果表
 
 ### 4.2 已知的坑
 
@@ -110,11 +117,16 @@
 | `num_threads` 默认过高 | 训练卡住或内存爆 | 显式设 `num_threads=4` |
 | 把 `rating` 当权重 | 与其他模型口径不一致 | 本项目用隐式协议，`rating` 不参与 |
 | 用 LogisticLoss 但数据是隐式 | 收敛慢、指标差 | 用 `warp`（或 `bpr`） |
+| **lightfm 1.17 在 Windows 上 warp 必崩**（实测坑，原清单没写） | 进程直接消失，`exit=-1073741819` = `0xC0000005`；`python -X faulthandler` 定位到 `lightfm.py:696 fit_warp`；事件日志 `_lightfm_fast_no_openmp*.pyd 偏移 0x6708`。上游 issue #720，1.17 是回归 | 降到 **lightfm 1.16**（conda-forge win-64 构建）；或换 Linux/Colab |
+| **特征只有人口统计时用户向量撞车**（实测坑，本轮最大发现） | 6040 用户只有 **241 种**不同特征向量（平均 25 人共享），val Recall@10 卡在 0.0151，低于爆款基线 0.0353 | 加身份列（`identity=True`，用户 6,070 / 物品 3,444 列）→ val 0.0919；这样模型是 **hybrid MF**，报告里别写成纯 content-based |
 
 ### 4.3 额外加分（可选，W4）
 
 - [ ] **冷启动实验**：按 `README.md` / `DATA.md` 之外的约定，遮挡 20% 热门物品的评分后重训，
       对比 LightFM 与 Item-CF 在冷物品上的 Recall@10。这是本算法最大的卖点。
+      > 现状：**未做**。但 §4.2 最后一行已经给出了它的动机与量化证据 ——
+      > 当前特征设计在"有少量交互"的中长尾（100–1499 条）上比 Item-CF 高 36%~56%，
+      > 而在 <100 条评分的物品上完全无改善，恰好说明"零交互"只能靠遮挡实验来单独衡量。
 
 ---
 
