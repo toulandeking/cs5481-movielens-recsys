@@ -1,0 +1,31 @@
+{
+  "selected_trial": 20,
+  "params": {
+    "hidden_size": 64,
+    "num_layers": 1,
+    "maxlen": 50,
+    "dropout": 0.1,
+    "learning_rate": 0.001,
+    "epochs": 5,
+    "patience": 2,
+    "batch_size": 32,
+    "seed": 42,
+    "threads": 4,
+    "device": "cuda"
+  },
+  "best_epoch": 5,
+  "val_recall": 0.32450331125827814,
+  "val_ndcg": 0.18700349930768614,
+  "selection": "max full val Recall@10, then NDCG@10, then earliest trial",
+  "experiment": "fresh20",
+  "old_trials_counted": 0,
+  "repeated_experiment_after_prior_test_viewed": true,
+  "environment": {
+    "python": "3.13.12",
+    "torch": "2.7.1+cu128",
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU"
+  }
+}

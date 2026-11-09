@@ -39,7 +39,7 @@ data/canon/*.parquet          ← 冻结的数据契约，所有人只读这里
     outputs/{metrics,figures,top10}  →  app/ 演示界面
 ```
 
-> 图中 `lightfm.py` / `lrurec.py` 尚未实现（进度见 §4）；`app/` 是计划中的 Streamlit 界面。
+> 三个模型适配器均已实现；`app/` 是计划中的 Streamlit 界面。LRURec 的本机运行步骤见 [LRUREC.md](LRUREC.md)。
 
 **三条设计约束**（保证三个模型的数字可比）：
 
@@ -71,7 +71,7 @@ cd cs5481-movielens-recsys
 | scipy | 1.16.0 | 稀疏矩阵（Item-CF 相似度） |
 | pyarrow | 26.0.0 | parquet 读写（缺失时自动降级为 pickle） |
 | matplotlib | ≥ 3.7 | 结果图 |
-| lightfm / torch | 待补 | 另两个算法的负责人填写 |
+| lightfm / torch | lightfm 1.16 / torch 2.7.1+cu128（LRURec CUDA 环境） | 分别使用独立环境，见算法文档 |
 
 ```bash
 python -m pip install -r requirements.txt
@@ -118,7 +118,11 @@ python -m src.adapters.lightfm --eval      # test 评估 + 导出 top-10（约 3
 python -m src.adapters.lightfm --analyze   # 错误分析表 + 两张图
 python -m src.adapters.lightfm --top --uid 42   # 查看某个用户的推荐
 
-# LRURec：命令形式相同，见 TASKS.md
+# LRURec（独立 .venv-lrurec-cuda 环境，完整新20组，详见 LRUREC.md）
+python -m src.adapters.lrurec_fresh20 --run-dir outputs/lrurec_run20 --workers 1 --device cuda
+# 已完成目录的验收与推荐查看（不重新训练）
+python -m src.adapters.lrurec_fresh20 --run-dir outputs/lrurec_run20 --check
+python -m src.adapters.lrurec_fresh20 --run-dir outputs/lrurec_run20 --top --uid 42
 ```
 
 > ⚠️ Windows 上 LightFM 要用独立的 CPython 3.9 解释器（原因见 [LIGHTFM.md](LIGHTFM.md) §9）：
@@ -154,14 +158,14 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 
 | 模块 | 状态 | 说明 |
 |---|---|---|
-| 数据管道（canon） | ✅ 完成 | 5 个 parquet，全量 `assert` 校验 |
+| 数据管道（canon） | ✅ 完成 | 4 个 parquet + id_map.json，全量 `assert` 校验 |
 | 评估框架 | ✅ 完成 | full / candidates 双模式，含随机与爆款基线自检 |
 | 适配层基类 | ✅ 完成 | `AdapterBase` + 模型注册表 |
 | **Item-CF** | ✅ 完成 | 调参、评估、错误分析、演示导出 |
 | **LightFM** | ✅ 完成 | 调参、评估、错误分析、演示导出；test Recall@10 = 0.0775 |
-| LRURec | ⬜ 待开始 | — |
+| LRURec | ✅ 完成 | 全新 20 组，旧结果不计；GPU 每组最多 5 epoch；full test Recall@10=0.2272；见 LRUREC.md |
 | Streamlit 演示 | ⬜ 待开始 | 依赖三个模型的 `outputs/top10/*.parquet` |
-| 技术报告 | ⬜ 进行中 | 数据与 Item-CF 章节素材已就绪 |
+| 技术报告 | ⬜ 进行中 | 数据及三个算法章节素材已就绪，待整合 |
 
 详细的任务拆分见 [TASKS.md](TASKS.md)。
 
@@ -203,8 +207,17 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | LightFM 图：超参/特征敏感性 | `outputs/figures/lightfm_tuning_sensitivity.png` |
 | LightFM 图：流行度偏置 | `outputs/figures/lightfm_popularity_bias.png` |
 | LightFM 推荐结果（演示用） | `outputs/top10/lightfm.parquet` |
+| LRURec 指标（两模式） | [results/lrurec/lrurec_test.json](results/lrurec/lrurec_test.json) |
+| LRURec 调参记录（全新 20 组） | [results/lrurec/lrurec_tuning_val.csv](results/lrurec/lrurec_tuning_val.csv) |
+| LRURec 最终超参 | [results/lrurec/lrurec_params.json](results/lrurec/lrurec_params.json) |
+| LRURec 错误分析（按目标热度分档） | [results/lrurec/lrurec_popularity_buckets.csv](results/lrurec/lrurec_popularity_buckets.csv) |
+| LRURec 图：20 组参数敏感性 | [results/lrurec/lrurec_tuning_sensitivity.png](results/lrurec/lrurec_tuning_sensitivity.png) |
+| LRURec 图：流行度偏置 | [results/lrurec/lrurec_popularity_bias.png](results/lrurec/lrurec_popularity_bias.png) |
+| LRURec 本地推荐 / 检查点 | `<run>/top10/lrurec.parquet`、`<run>/models/lrurec_best.pt`（运行命令生成） |
 
-> 两个算法的全部细节见 [ITEMCF.md](ITEMCF.md) 与 [LIGHTFM.md](LIGHTFM.md)。
+> 三个算法的全部细节见 [ITEMCF.md](ITEMCF.md)、[LIGHTFM.md](LIGHTFM.md) 与 [LRUREC.md](LRUREC.md)。
+
+> 当前 LRURec 主结果来自 `outputs/lrurec_fresh20_cuda_20261109/`：20 组全部重新初始化和训练，旧 10 组不计。它是既有 test 已查看后的完整重复实验；每次实验内只在选参后计算 test 一次。新运行和验收命令见 [LRUREC.md](LRUREC.md)。
 
 ### 当前结果（test，K=10）
 
@@ -213,8 +226,10 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | 随机打分 | 0.0033 | 0.0014 | 0.0990 | 0.0430 |
 | 最流行基线 | 0.0353 | 0.0173 | 0.4159 | 0.2237 |
 | Item-CF | 0.0641 | 0.0335 | 0.5560 | 0.3224 |
-| **LightFM** | **0.0775** | **0.0398** | **0.6621** | **0.3895** |
-| LRURec | — | — | — | — |
+| LightFM | 0.0775 | 0.0398 | 0.6621 | 0.3895 |
+| **LRURec（全新20组）** | **0.2272** | **0.1233** | **0.7531** | **0.5366** |
+
+> **LRURec 相对 LightFM：full Recall@10 +193.1%、NDCG@10 +209.8%；candidates +13.8% / +37.8%。** 完整 20 组均重新训练，旧 10 组不计；本次使用此前已查看过的同一 test，属于重复实验。每组最多 5 epoch，不代表充分收敛上限。见 [LRUREC.md](LRUREC.md)。
 
 > **LightFM 相对 Item-CF：full Recall@10 +20.9%、NDCG@10 +18.7%、candidates +19.1% / +20.8%。**
 > 增益集中在训练期评分数 100–1499 的中长尾影片（+36%~+56%），热门档仅 +2.6%，评分数 <100 的物品无改善 ——
@@ -231,6 +246,7 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | 确定性 | 切分按 `(timestamp, MovieID)` 稳定排序；相似度截断用 stable argsort |
 | 环境 | Python 3.12.8 · pandas 2.3.1 · numpy 2.1.3 · scipy 1.16.0 · pyarrow 26.0.0 |
 | LightFM 子环境 | 因 lightfm 在 Windows 无可用 wheel，单独用 CPython **3.9.13**（embeddable）· numpy 1.23.5 · scipy 1.10.1 · pandas 1.5.3 · pyarrow 12.0.1 · lightfm **1.16**；启动器 `<workspace>\.py39e\rt\python.exe`，详见 [LIGHTFM.md](LIGHTFM.md) §10 |
+| LRURec CUDA 环境 | Python 3.13.12 · PyTorch 2.7.1+cu128 · CUDA 12.8 · RTX 5060 Laptop GPU；[精确依赖](requirements-lrurec-cuda.txt) |
 | 数据切分 | 固定写入 `data/canon/`，任何人不得在脚本内重新切分 |
 
 ---
@@ -255,6 +271,7 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | [DATA.md](DATA.md) | 数据结构、7 个坑、四项关键决策的依据、canon 规格与读取纪律 |
 | [ITEMCF.md](ITEMCF.md) | Item-CF 的算法定义、结果、三条关键发现、结果展示方案 |
 | [LIGHTFM.md](LIGHTFM.md) | LightFM 的算法定义、WARP 动机、20 组调参、长尾分档对照、Windows 踩坑与复现清单 |
+| [LRUREC.md](LRUREC.md) | LRURec 定义、完整新 20 组实验、结果、错误分析、GPU 环境与复现步骤 |
 | [TASKS.md](TASKS.md) | 三人三算法的任务清单、验收标准、时间节点 |
 
 > 新增算法文档时请沿用 `ITEMCF.md` 的小节结构（状态 → 模块清单 → 算法定义 → 运行 →
@@ -263,6 +280,8 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 ---
 
 ## 10. 已知限制
+
+- LRURec 主表使用 train-only 推理历史以统一信息范围，未在 test 输入中追加 val；这与官方常用协议不同。每组最多 5 epoch，结果不代表充分训练上限。
 
 - Item-CF 的命中高度集中在热门电影：目标评分数 < 100 时命中率不足 0.5%，
   长尾与冷物品需要内容侧信息（这正是引入 LightFM 的动机）。

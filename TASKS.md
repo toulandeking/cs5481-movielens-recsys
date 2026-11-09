@@ -1,6 +1,6 @@
 # 任务清单 
 
-> **更新**：2026-10-28
+> **更新**：2026-11-09
 
 > **配套**：[README.md](README.md) · [DATA.md](DATA.md) · [ITEMCF.md](ITEMCF.md)（模板）
 
@@ -12,7 +12,7 @@
 |---|---|---|---|---:|---|
 | ① | **Item-based CF** | 课内讲过的算法 | **A** | ✅ **完成** | — |
 | ② | **LightFM** | Reference Algorithms | **B** | ✅ **完成** | 11/16 |
-| ③ | **LRURec** | 2024–2025 新算法 | **C** | ⬜ 待开始 | 11/16 |
+| ③ | **LRURec** | 2024–2025 新算法 | **C** | ✅ 完成（CPU 有限预算） | 11/16 |
 
 > 作业原文要求「恰好三个算法」：一个课内、一个 Reference、一个 2024–2025 新算法。
 > **参数变体不算不同算法**，不能重复。
@@ -134,39 +134,43 @@
 
 ### 5.1 任务清单
 
-**环境（W2 上半周，全组最高风险，必须最先验证）**
-- [ ] `git clone https://github.com/yueqirex/LRURec`
-- [ ] 确认 PyTorch 可训练（CPU 也可，但记录单 epoch 耗时）
-- [ ] 跑通 README 里的 MovieLens-1M 命令（用官方数据即可，不必用我们的 canon）
-- [ ] ⚠️ **不要碰 Mamba4Rec**（需要 `cuda` + `causal-conv1d` + `mamba-ssm`，装不上概率高）
-- [ ] 若环境失败 → **立刻上报**，备选 ICSRec 或换算法
+**环境（已在独立 `.venv-lrurec-cuda` 验证，PyTorch 2.7.1+cu128 / CUDA 12.8 / RTX 5060）**
+- [x] 核对官方实现 `yueqirex/LRURec`，保留模型出处和基准提交
+- [x] 确认 GPU 全量训练、检查点保存与重载一致性，记录逐 epoch 耗时
+- [x] 官方模型在团队 canon 上跑通全量训练与评估（不运行官方独立重切分与评估）
+- [x] ⚠️ **不要碰 Mamba4Rec**（需要 `cuda` + `causal-conv1d` + `mamba-ssm`，装不上概率高）
+- 环境已成功，无需启用 ICSRec 备选。
 
 **理解算法（W2 上半周）**
-- [ ] 读 LRURec（WSDM 2024，DOI 10.1145/3616855.3635760）
-- [ ] 弄清：线性 RNN 的并行训练 + 用户序列建模
+- [x] 核对 LRURec 官方实现与论文定义（WSDM 2024，DOI 10.1145/3616855.3635760）
+- [x] 弄清：线性 RNN 的并行训练 + 用户序列建模
 
 **实现（W2）**
-- [ ] 新建 `src/adapters/lrurec.py`，继承 `AdapterBase`，`name = "LRURec"`
-- [ ] 从 canon 造 `(user_id, item_id, timestamp)` 三列无表头文件（官方 `.inter` 格式）
+- [x] 完整 20 组运行器 `src/adapters/lrurec_fresh20.py`；新目录、随机初始化、拒绝复用旧检查点
+- [x] 新建 `src/adapters/lrurec.py`，继承 `AdapterBase`，`name = "LRURec"`
+- [x] 直接从 canon 生成按时间排列的训练张量，无须中间 `.inter` 文件
       ⚠️ **item id 必须 1..N，`0` 留给 padding**（canon 是 0-based，需要 `+1`）
-- [ ] 序列按 `ts` 升序；train 用 train 段，val/test 各取一条作目标
-- [ ] **序列最大长度 `maxlen` 需在这里定稿**（`DATA.md` 的 D3 待定项），建议从 200 起试
-- [ ] `fit()`：训练到 early stopping，记录 epoch 数与耗时
-- [ ] `score_matrix()`：`user_emb @ item_emb.T`
-- [ ] 在 `base.py` 的 `_BUILTIN` 里登记 `"lrurec"`
+- [x] 序列按 `ts` 升序；train 用 train 段，val/test 各取一条作目标
+- [x] **序列最大长度 `maxlen=50` 已定稿**（已同步 DATA.md D3；全新20组 val 联调选择）
+- [x] `fit()`：训练到 early stopping，记录 epoch 数与耗时
+- [x] `score_matrix()`：序列状态与 item embedding 点积，加官方输出偏置
+- [x] 在 `base.py` 的 `_BUILTIN` 里登记 `"lrurec"`
 
-**调参（W3 上半周，只用 val）**
-- [ ] 网格覆盖 `hidden_size`、`num_layers`、`maxlen`、`dropout`、`learning_rate`
-- [ ] ≥10 组，写 `outputs/metrics/lrurec_tuning_val.csv`
+**调参（W3 上半周，只用 val；已完成全新20组，旧10组不计，每组最多 5 epoch，patience=2）**
+- [x] 网格覆盖 `hidden_size`、`num_layers`、`maxlen`、`dropout`、`learning_rate`
+- [x] 已完成全新20组；[完整调参记录](results/lrurec/lrurec_tuning_val.csv)，旧结果计入数为 0
 
 **评估（W3）**
-- [ ] `--eval` 一次 → `outputs/metrics/lrurec_test.json`
-- [ ] `--analyze` → 表 + 2 图
-- [ ] `outputs/top10/lrurec.parquet`
+- [x] 本次 20 组选参后评估 test 一次；[指标 JSON](results/lrurec/lrurec_test.json)
+- [x] 错误分析表和 2 张图已发布到 [results/lrurec/](results/lrurec/README.md)
+- [x] `outputs/lrurec_fresh20_cuda_20261109/top10/lrurec.parquet`
+
+**验收**
+- [x] 4 项算法测试 + 3 项新实验验收全部通过；[验证记录](results/lrurec/verification.txt)
 
 **文档（W3 末）**
-- [ ] 写 `LRUREC.md`
-- [ ] 结果行填进 `README.md` §6
+- [x] 按 ITEMCF 文档结构完成 [LRUREC.md](LRUREC.md)
+- [x] 结果行填进 `README.md` §6
 
 ### 5.2 已知的坑
 
@@ -179,6 +183,9 @@
 | 用 test 调 early stopping | 泄漏 | early stopping 只看 val |
 
 ---
+
+
+> 2026-11-09：按用户要求完整重跑 20 组，旧结果计入数为 0。新目录独立选参并评估一次 test；由于旧 test 已查看，重复实验事实已记录。详见 LRUREC.md。
 
 ## 6. 非算法线的工作（需要额外指派）
 

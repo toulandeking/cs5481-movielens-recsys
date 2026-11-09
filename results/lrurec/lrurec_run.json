@@ -1,0 +1,19 @@
+{
+  "experiment": "fresh20",
+  "trials": 20,
+  "old_trials_counted": 0,
+  "old_checkpoints_loaded": 0,
+  "selected_trial": 20,
+  "best_epoch": 5,
+  "checkpoint_sha256": "e341749fc1e79f744a91e8eb39e44ca6abca7691d481862bdb475e8eff66d301",
+  "fit_seconds": 43.32534580000356,
+  "total_fit_seconds": 640.6634325000123,
+  "training_windows": 22532,
+  "score_shape": [
+    6040,
+    3416
+  ],
+  "top10_rows": 60400,
+  "test_evaluations_in_this_run": 1,
+  "repeated_experiment_after_prior_test_viewed": true
+}

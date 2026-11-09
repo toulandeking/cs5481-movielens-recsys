@@ -16,7 +16,10 @@ matplotlib>=3.7      # 验证版本 3.10.x （--analyze 出图）
 #      本项目实际用「conda-forge lightfm 1.16 + 内嵌 CPython 3.9.13」，见 LIGHTFM.md §10。
 #       依赖 numpy<2（1.16 的构建约束），因此该环境里的 numpy 是 1.23.5，与上文的 >=1.26 不冲突（不同环境）
 # lightfm==1.16       # 验证版本 1.16（仅 Linux/Colab 可用 1.17+）
-# torch>=2.0          # LRURec（C 负责）—— 装完请补上验证版本
+# LRURec CPU 可用本文件；CUDA 精确版本见 requirements-lrurec-cuda.txt
 
 # ---- 演示层（可选，做 Streamlit 时再装）----
 # streamlit>=1.30
+torch>=2.0  # LRURec; CUDA experiment uses the separate pinned requirements file
+
+# 当前 LRURec 全新20组使用独立 CUDA 环境，torch 2.7.1+cu128；安装与验收见 LRUREC.md。

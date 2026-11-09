@@ -1,0 +1,350 @@
+{
+  "started_at": "2026-11-08T17:23:49.866167+00:00",
+  "experiment": "fresh20",
+  "trials": 20,
+  "plans": [
+    {
+      "trial": 1,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 100,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 2,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 3,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 2,
+        "maxlen": 200,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 4,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 5,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 2,
+        "maxlen": 200,
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 6,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 7,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.1,
+        "learning_rate": 0.0005,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 8,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 100,
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 9,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 2,
+        "maxlen": 100,
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 10,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 300,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 11,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 100,
+        "dropout": 0.0,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 12,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.0,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 13,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 100,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 14,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.0,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 15,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 200,
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 16,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 100,
+        "dropout": 0.1,
+        "learning_rate": 0.0005,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 17,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 100,
+        "dropout": 0.1,
+        "learning_rate": 0.0005,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 18,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 2,
+        "maxlen": 100,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 19,
+      "params": {
+        "hidden_size": 32,
+        "num_layers": 1,
+        "maxlen": 50,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    },
+    {
+      "trial": 20,
+      "params": {
+        "hidden_size": 64,
+        "num_layers": 1,
+        "maxlen": 50,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "epochs": 5,
+        "patience": 2,
+        "batch_size": 32,
+        "seed": 42,
+        "threads": 4,
+        "device": "cuda"
+      }
+    }
+  ],
+  "old_trials_counted": 0,
+  "old_checkpoints_loaded": 0,
+  "workers": 1,
+  "selection": "max full val Recall@10, then NDCG@10, then earliest trial",
+  "protocol": "train-only context; common canon; shared full/candidates evaluator",
+  "repeated_experiment_after_prior_test_viewed": true,
+  "original_frozen_sha256": {
+    "metrics/lrurec_test.json": "5cab0cbcb53f93191d8d07732615bbf56b10fd7b9d47c232ac6dfc64e5999476",
+    "metrics/lrurec_params.json": "4d727f9c814a6484ec4984878f5a148f21eaf0b5098f2997e4cc93b26f1c1b0b",
+    "metrics/lrurec_run.json": "b43b2cda618365b091220662120169b2f79ecee325df40122b5bbf3ae4ed1cb3",
+    "models/lrurec_best.pt": "0da2296d107eb3b44c76e7107066d373b669bf45856757721dd922a697a39a17",
+    "scores/lrurec_test.npy": "30193d39443ee5bcf2e9141a74dddb64c387fcc3f47a1147c5253b530ea8f4f9",
+    "top10/lrurec.parquet": "d95eb5114e6de462854a52fd6272db99864c4737285352849c277c4e90f4c1eb"
+  },
+  "canonical_ratings_sha256": "80bdbe5d3ee0f01e96c6fbb1e747ce6941a67b6a714e05e712271d8eac253ea1",
+  "environment": {
+    "python": "3.13.12",
+    "torch": "2.7.1+cu128",
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU"
+  }
+}

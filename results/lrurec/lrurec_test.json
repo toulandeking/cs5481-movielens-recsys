@@ -1,0 +1,39 @@
+{
+  "contract": {
+    "n_users": 6040,
+    "n_items": 3416,
+    "k": 10,
+    "exclude_seen": true,
+    "seed": 42
+  },
+  "reports": {
+    "full": {
+      "model": "LRURec-fresh20",
+      "mode": "full",
+      "split": "test",
+      "k": 10,
+      "n_users": 6040,
+      "n_candidates_mean": 3251.501490066225,
+      "recall": 0.2271523178807947,
+      "ndcg": 0.12328319157758871,
+      "hr": 0.2271523178807947,
+      "mean_hit_rank": 4.459183673469388,
+      "recall_at_1": 0.04768211920529802,
+      "generated_at": "2026-11-08T17:34:53+00:00"
+    },
+    "candidates": {
+      "model": "LRURec-fresh20",
+      "mode": "candidates",
+      "split": "test",
+      "k": 10,
+      "n_users": 6040,
+      "n_candidates_mean": 101.0,
+      "recall": 0.7531456953642384,
+      "ndcg": 0.5365509254661522,
+      "hr": 0.7531456953642384,
+      "mean_hit_rank": 2.7474170147285117,
+      "recall_at_1": 0.3379139072847682,
+      "generated_at": "2026-11-08T17:34:53+00:00"
+    }
+  }
+}

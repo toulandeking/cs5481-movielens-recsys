@@ -1,0 +1,21 @@
+test_causality_and_projection (test_lrurec.LRURecTests.test_causality_and_projection) ... <repo>\.venv-lrurec-cuda\Lib\site-packages\torch\nn\modules\module.py:1325: UserWarning: Complex modules are a new feature under active development whose design may change, and some modules might not work as expected when using complex tensors as parameters or buffers. Please file an issue at https://github.com/pytorch/pytorch/issues/new?template=bug-report.yml if a complex module does not work as expected.
+  warnings.warn(
+ok
+test_no_holdout_in_histories (test_lrurec.LRURecTests.test_no_holdout_in_histories) ... ok
+test_parallel_scan_matches_sequential (test_lrurec.LRURecTests.test_parallel_scan_matches_sequential) ... <repo>\.venv-lrurec-cuda\Lib\site-packages\torch\nn\modules\module.py:1325: UserWarning: Complex modules are a new feature under active development whose design may change, and some modules might not work as expected when using complex tensors as parameters or buffers. Please file an issue at https://github.com/pytorch/pytorch/issues/new?template=bug-report.yml if a complex module does not work as expected.
+  warnings.warn(
+ok
+test_windows_cover_all_transitions (test_lrurec.LRURecTests.test_windows_cover_all_transitions) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.098s
+
+OK
+test_complete_new_run (test_lrurec_fresh20.Fresh20Tests.test_complete_new_run) ... ok
+test_existing_run_cannot_be_reused (test_lrurec_fresh20.Fresh20Tests.test_existing_run_cannot_be_reused) ... ok
+test_new_twenty_trial_manifest (test_lrurec_fresh20.Fresh20Tests.test_new_twenty_trial_manifest) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 8.482s
+
+OK

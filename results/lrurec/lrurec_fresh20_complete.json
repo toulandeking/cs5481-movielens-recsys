@@ -1,0 +1,12 @@
+{
+  "completed_at": "2026-11-08T17:34:57.557945+00:00",
+  "trials": 20,
+  "old_trials_counted": 0,
+  "old_checkpoints_loaded": 0,
+  "original_experiment_preserved": true,
+  "selected_trial": 20,
+  "val_recall": 0.32450331125827814,
+  "val_ndcg": 0.18700349930768614,
+  "full_recall": 0.2271523178807947,
+  "full_ndcg": 0.12328319157758871
+}
