@@ -139,7 +139,29 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 > 说明：Item-CF 无法直接消费性别/年龄/类型，该命令用「同群用户画像 → 伪历史 → 邻域扩散」
 > 的近似方案实现，同时作为冷启动实验的对照组。原生支持用户特征的是 LightFM。
 
-### 3.6 环境自检（新成员必做）
+### 3.6 演示界面（Streamlit）
+
+```bash
+python -m pip install streamlit
+streamlit run app/streamlit_app.py
+```
+
+浏览器打开 <http://localhost:8501>。界面分两个 Tab：
+
+| Tab | 输入 | 输出 |
+|---|---|---|
+| ① 选一个用户 | uid（0–6039，可用「随机换一个」） | 三算法**并排**展示 top-10，含片名 / 年份 / 类型 / 分数 |
+| ② 输入画像 | 性别 + 年龄段 + 喜欢的类型（可多选） | 按人群画像的冷启动推荐 + 借来的「伪历史」 |
+
+顶部还展示了三个算法的 test 主结果表。
+
+> **关键设计**：界面**只读** `top10.parquet` 与 `*_test.json`，**不加载任何模型**。
+> 因此即使某台机器装不上 lightfm / torch，界面依然能展示该模型的推荐。
+> 缺产物时会显示「待生成」，补上文件后刷新页面即可，无需改代码。
+>
+> 产物搜索路径：`outputs/top10/<model>.parquet` 或 `results/<model>/top10.parquet`。
+
+### 3.7 环境自检（新成员必做）
 
 上面 3.1–3.3 跑完后，执行这四条命令；**全部通过说明环境已就绪**，可以开始写自己的算法：
 
@@ -164,8 +186,9 @@ python -m src.demo_profile --gender F --age 25-34 --genres Comedy,Romance --top 
 | **Item-CF** | ✅ 完成 | 调参、评估、错误分析、演示导出 |
 | **LightFM** | ✅ 完成 | 调参、评估、错误分析、演示导出；test Recall@10 = 0.0775 |
 | LRURec | ✅ 完成 | 全新 20 组，旧结果不计；GPU 每组最多 5 epoch；full test Recall@10=0.2272；见 LRUREC.md |
-| Streamlit 演示 | ⬜ 待开始 | 依赖三个模型的 `outputs/top10/*.parquet` |
+| Streamlit 演示 | 🟡 可用（待补 2 个模型产物） | 界面已完成并验证；目前只有 ItemCF 的 `top10.parquet`，LightFM / LRURec 到货后自动显示 |
 | 技术报告 | ⬜ 进行中 | 数据及三个算法章节素材已就绪，待整合 |
+| 课堂演示材料 | ⬜ 待准备 | 5 分钟，需覆盖 task / data / 三算法 / evaluation / main findings |
 
 详细的任务拆分见 [TASKS.md](TASKS.md)。
 
