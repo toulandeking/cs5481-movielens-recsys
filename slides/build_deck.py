@@ -138,11 +138,11 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
     # kicker
     if s.get("kicker"):
         tf = _textbox(slide, M, M - 0.06, title_w, 0.32)
-        _set(tf.paragraphs[0], s["kicker"].upper(), 11.5, bold=True, color=accent)
+        _set(tf.paragraphs[0], s["kicker"].upper(), 12.5, bold=True, color=accent)
 
     # title
     tf = _textbox(slide, M, M + 0.30, title_w, 0.95)
-    _set(tf.paragraphs[0], s["title"], 30, bold=True, color=ink, space_after=0)
+    _set(tf.paragraphs[0], s["title"], 32, bold=True, color=ink, space_after=0)
 
     _rule(slide, M + 1.26, width=title_w, color=rule_color)
 
@@ -151,7 +151,7 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
     has_fig = bool(s.get("figure"))
 
     # ---------------- figure ----------------
-    fig_left, fig_w = M, 7.55
+    fig_left, fig_w = M, s.get("fig_w", 7.55)
     if has_fig:
         path = FIGS / s["figure"]
         if path.is_file():
@@ -164,7 +164,7 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
                 pic.height = int(pic.height * ratio)
             cap = _textbox(slide, fig_left, SH - 0.92, fig_w, 0.3)
             _set(cap.paragraphs[0], s.get("caption") or DEFAULT_CAPTION,
-                 9.5, color=muted, space_after=0)
+                 10.5, color=muted, space_after=0)
         else:
             tf = _textbox(slide, fig_left, body_top, fig_w, 0.6)
             _set(tf.paragraphs[0], f"[missing figure: {s['figure']}]", 12, color=MUTED)
@@ -184,12 +184,13 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
         total_w = sum(widths)
         widths = [w * col_w / total_w for w in widths]
 
-        row_h = 0.42
+        row_h = 0.52
         shape = slide.shapes.add_table(
             n_rows, n_cols, Inches(col_left), Inches(body_top + 0.06),
             Inches(col_w), Inches(row_h * n_rows),
         )
         table = shape.table
+        fnt = t.get("font", 15.5)          # 窄栏表可单独指定更小的字号
         for i, w in enumerate(widths):
             table.columns[i].width = Inches(w)
 
@@ -197,7 +198,7 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
             cell = table.cell(0, c)
             cell.text = head
             para = cell.text_frame.paragraphs[0]
-            _set(para, head, 12.5, bold=True, color=WHITE, space_after=0)
+            _set(para, head, fnt, bold=True, color=WHITE, space_after=0)
             cell.fill.solid()
             cell.fill.fore_color.rgb = ACCENT
             cell.margin_left = cell.margin_right = Inches(0.08)
@@ -207,7 +208,7 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
                 cell = table.cell(r, c)
                 cell.text = val
                 para = cell.text_frame.paragraphs[0]
-                _set(para, val, 12.5, bold=(c == 0), space_after=0)
+                _set(para, val, fnt, bold=(c == 0), space_after=0)
                 cell.fill.solid()
                 cell.fill.fore_color.rgb = WHITE if r % 2 else RGBColor(0xF5, 0xF7, 0xFA)
                 cell.margin_left = cell.margin_right = Inches(0.08)
@@ -218,7 +219,8 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
             _set(note.paragraphs[0],
                  "Gains are consistent in NDCG, so the ranking is not an artefact of one metric.",
                  10.5, color=MUTED, space_after=0)
-        body_top_text = body_top + 0.06 + row_h * n_rows + (1.05 if has_fig else 0.2)
+        # 表格行会因为换行自动变高，因此下方留更大间距，避免压住要点
+        body_top_text = body_top + 0.06 + row_h * n_rows + (1.05 if has_fig else 0.9)
 
     else:
         body_top_text = body_top
@@ -232,13 +234,13 @@ def add_slide(prs: Presentation, s: dict, index: int, total: int) -> None:
             p = tf.paragraphs[0] if first else tf.add_paragraph()
             first = False
             if level == 0:
-                _set(p, "•  " + text, 15.5, color=ink, space_before=7, space_after=5)
+                _set(p, "•  " + text, 19, color=ink, space_before=7, space_after=5)
             else:
-                _set(p, "      –  " + text, 13, color=muted, space_before=0, space_after=4)
+                _set(p, "      –  " + text, 15.5, color=muted, space_before=0, space_after=4)
 
     # ---------------- footer + page number ----------------
     ff = _textbox(slide, M + 0.22, SH - 0.44, 6.6, 0.26)
-    _set(ff.paragraphs[0], FOOTER, 8.5, color=muted, space_after=0)
+    _set(ff.paragraphs[0], FOOTER, 9, color=muted, space_after=0)
 
     tf = _textbox(slide, SW - M - 0.9, SH - 0.44, 0.9, 0.3)
     _set(tf.paragraphs[0], f"{index} / {total}", 10, color=muted, space_after=0)

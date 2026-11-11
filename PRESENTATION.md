@@ -7,34 +7,35 @@
 > Generated from `slides/content.py`. Edit that file, then re-run `python slides/build_notes.py`.
 
 
-**Planned speaking time: 4:50 / 5:00**
+**Planned: 4:15 of slides + 30s live demo = 4:45 / 5:00**
 
 
 ---
 
 ## 1. Timing at a glance
 
-| # | Slide | Time | Cumulative |
+| # | Segment | Time | Cumulative |
 |---:|---|---:|---:|
-| 1 | Movie Recommendation on MovieLens-1M | 10s | 0:10 |
-| 2 | Task and evaluation protocol | 30s | 0:40 |
-| 3 | The three models | 45s | 1:25 |
-| 4 | Results: full ranking, held-out test set | 45s | 2:10 |
-| 5 | Thought 1 — feature design beat tuning by 6× | 50s | 3:00 |
-| 6 | Thought 2 — each model wins a different slice | 45s | 3:45 |
-| 7 | Thought 3 — validation flatters, so we report test only | 40s | 4:25 |
-| 8 | What we take away | 25s | 4:50 |
-| — | **Total** | **290s** | **4:50** |
+| 1 | Movie Recommendation on MovieLens-1M | 14s | 0:14 |
+| 2 | Task and evaluation protocol | 37s | 0:51 |
+| 3 | The three models | 35s | 1:26 |
+| 4 | Results: full ranking, held-out test set | 34s | 2:00 |
+| ▶ | **Live demo — Streamlit, one user, three models side by side** | **30s** | **2:30** |
+| 5 | Thought 1 — feature design beat tuning by 6× | 44s | 3:14 |
+| 6 | Thought 2 — each model wins a different slice | 36s | 3:50 |
+| 7 | Thought 3 — validation flatters, so we report test only | 35s | 4:25 |
+| 8 | What we take away | 20s | 4:45 |
+| — | **Total** | **285s** | **4:45** |
 
 
-> Leave ~10s of slack. If you run long, cut Thought 3 (slide 7) — it is the least visual and can survive as a spoken sentence.
+> Target **4:45**, hard stop at 5:00. If you run long, cut Thought 3 (slide 7) — it is the least visual and survives as one spoken sentence.
 
 
 ---
 
 ## 2. Slide by slide
 
-### Slide 1 — Movie Recommendation on MovieLens-1M  ·  `10s`
+### Slide 1 — Movie Recommendation on MovieLens-1M  ·  `14s`
 
 *On-slide kicker:* CS5481 Recommender Systems  ·  Group Project
 
@@ -56,7 +57,7 @@
 
 ---
 
-### Slide 2 — Task and evaluation protocol  ·  `30s`
+### Slide 2 — Task and evaluation protocol  ·  `37s`
 
 *On-slide kicker:* One split, one metric path, one candidate set — for all three models
 
@@ -81,7 +82,7 @@
 
 ---
 
-### Slide 3 — The three models  ·  `45s`
+### Slide 3 — The three models  ·  `35s`
 
 *On-slide kicker:* Different families, deliberately: neighborhood, hybrid factorization, sequence
 
@@ -110,7 +111,7 @@
 
 ---
 
-### Slide 4 — Results: full ranking, held-out test set  ·  `45s`
+### Slide 4 — Results: full ranking, held-out test set  ·  `34s`
 
 *On-slide kicker:* All numbers on the same split, the same candidates and the same metric code
 
@@ -137,7 +138,42 @@
 
 ---
 
-### Slide 5 — Thought 1 — feature design beat tuning by 6×  ·  `50s`
+### ▶ Live demo — no slide (`30s`)
+
+**Switch to the Streamlit window here.** Press `B` in PowerPoint to black the screen while you alt-tab, so the audience does not watch you fumble.
+
+
+**Script (EN)**
+
+> Let me show this working. I will pick a user, and you will see all three models rank movies for the same person, side by side. Same user, same catalogue, three very different lists — and the third one, the sequential model, is the one that most often recovers a title the user actually watched: 22.7 percent of users against 6.4 for the first column.
+
+
+**On screen — the only three things the audience needs**
+
+| Where | What it is |
+|---|---|
+| Top panel | three algorithms × two evaluation views — full ranking and 101-candidate |
+| Tab 1 | one user, three recommendation lists side by side, ranks 1–10 |
+| The one thing to say | only the ranks are comparable; each Score lives on its own scale |
+
+
+**Click order — say it to yourself in this order**
+
+1. Click **🎲 Random user** exactly once. Nothing else on this page.
+2. Read the user line aloud: gender · age · occupation · number of ratings.
+3. Point at the three columns; name the gap: only the third list routinely recovers what the user actually watched — 22.7% of users against 6.4% for Item-CF.
+4. Stop. **Do not open the expanders on stage** — they are Q&A material, not demo material.
+
+
+> Column-by-column definitions (Score scales, Split, Cohort affinity, the asterisk) are deliberately **not** in this block — they are in §4 Q&A, so you only reach for them if asked.
+
+
+**中文提示**：演示 30 秒：只点一次「随机换一个」，指着三列说同一句话就切回。不要现场调参、不要滚页面。
+
+
+---
+
+### Slide 5 — Thought 1 — feature design beat tuning by 6×  ·  `44s`
 
 *On-slide kicker:* LightFM, 20 configurations, all selected on validation only
 
@@ -163,7 +199,7 @@
 
 ---
 
-### Slide 6 — Thought 2 — each model wins a different slice  ·  `45s`
+### Slide 6 — Thought 2 — each model wins a different slice  ·  `36s`
 
 *On-slide kicker:* Hit rate grouped by how popular the held-out target is
 
@@ -188,7 +224,7 @@
 
 ---
 
-### Slide 7 — Thought 3 — validation flatters, so we report test only  ·  `40s`
+### Slide 7 — Thought 3 — validation flatters, so we report test only  ·  `35s`
 
 *On-slide kicker:* A prediction made from the data, then confirmed by two independent models
 
@@ -212,7 +248,7 @@
 
 ---
 
-### Slide 8 — What we take away  ·  `25s`
+### Slide 8 — What we take away  ·  `20s`
 
 *On-slide kicker:* Three lessons and one open problem
 
@@ -235,7 +271,40 @@
 
 ---
 
-## 3. Q&A preparation (5 minutes)
+## 3. Run of show
+
+### 3.1 Pre-flight (T-10 minutes)
+
+| # | Do this | Why |
+|---:|---|---|
+| 1 | `streamlit run app/streamlit_app.py` — leave the browser **open** on Tab 1, a user already picked | No waiting, no typing on stage |
+| 2 | Press **F11** for full screen; hide the Streamlit toolbar (⋮ → Settings → uncheck *Show app menu*) | Kills the toolbar clutter |
+| 3 | Open `slides/deck.pptx` in **Presenter View**, plug in the projector | Notes appear on the laptop only |
+| 4 | Check the three model columns are **all populated** (Item-CF / LightFM / LRURec) | A missing column reads as a broken demo |
+| 5 | Have `PRESENTATION.md` open on the phone as a backup script | Screen dies, talk does not |
+
+### 3.2 The switch itself
+
+```
+at 1:53  → slide 4 is on screen, you have just said '2.9 times'
+        → press B          (screen goes black — audience sees nothing)
+        → Alt+Tab          (browser)
+        → say the demo line, click 'Random user' once
+        → 30 seconds: point at the three columns, one sentence
+        → Alt+Tab back     (PowerPoint)
+        → press B again    (slide 4 returns)
+        → continue to slide 5
+```
+
+> **Why here, not at the end:** the numbers are on screen, so the demo makes them concrete; and you still finish on your conclusions rather than on a browser window.
+
+### 3.3 If the demo fails
+
+- Say *"the demo is running locally — I will show it during questions"* and go on. Do not debug on stage.
+- Take the first Q&A question about results, then show the window. A live demo inside Q&A reads as generosity, not as failure.
+- Worst case: the numbers on slide 4 already carry the argument; the demo is supporting evidence, not the argument itself.
+
+## 4. Q&A preparation (5 minutes)
 
 Answer in one breath: *concede what is true, then give the number.*
 
@@ -263,14 +332,42 @@ A: It ranks against 3,416 candidates with a single positive per user, which is h
 
 A: A cold-item hold-out experiment: remove all ratings of a random 20% of warm movies, retrain, and measure whether metadata can recover them. And use the movie-title text, since genres are too coarse.
 
+**Q: Walk me through the results table at the top of the demo.**
+
+A: **Full R@10 / Full NDCG@10** rank the held-out item against all 3,416 movies — that is the primary view and the one we quote. **Cand R@10 / Cand NDCG@10** rank it inside 1 positive plus 100 sampled negatives; that is the secondary view, kept only for comparability with papers that use a 1+99 protocol. The two are not comparable in absolute value, because the candidate view has 33× fewer distractors.
+
+**Q: Why are the three Score columns on completely different scales?**
+
+A: Because each model's score means something different. **Item-CF** sums item-item similarities and lands around 1.8–4.2. **LightFM** is a dot product plus user and item biases, and under WARP those biases drift together, so the score matrix sits around −751 to −290 — negative values are expected. **LRURec** is the dot product of a sequence state with an item embedding. Only the ordering is meaningful, so we compare ranks and never raw scores across columns.
+
+**Q: What is the Split column in the history table?**
+
+A: It shows where each rating lives in our leave-one-out protocol. `train` is what every model learns from; `val` was used only to choose hyper-parameters; `test` is the single held-out rating that the metric tries to rank inside the top ten. A model never sees its own `test` row — we show it on screen so the audience can see what is being predicted.
+
+**Q: What do Cohort affinity and Rated by mean in Tab 2?**
+
+A: **Cohort affinity** = Σ max(rating − 3, 0) ÷ (number of raters + 10) across the matched cohort. Only 4- and 5-star ratings count, and the +10 shrinkage stops a movie with three enthusiastic raters from topping the list. **Rated by** is how many cohort members rated that movie; anything below 15 raters is dropped before ranking.
+
+**Q: What happens if a profile matches too few users?**
+
+A: The cohort builder relaxes conditions in a fixed order — first drop the genre filter, then the age filter — and says so in the UI, for example 'genre filter too strict (21 users) — relaxed to any genre'. It never silently proceeds on a cohort too small to be meaningful.
+
+**Q: Some numbers in the demo table carry an asterisk. Why?**
+
+A: LightFM's owner did not commit its metrics JSON, so the full-ranking numbers were recomputed by `src/verify_results.py` from the committed top-10 export — no model code involved. The candidate-mode numbers cannot be derived from a top-10 export at all, so those two are **cited** from the owner's documentation and marked with an asterisk. Everything else in the table is the owner's own evaluation output.
+
+**Q: What do the ✅ / ⬜ cards under the title mean?**
+
+A: They only report whether that model's `top10.parquet` was found in the repository. Three ✅ means the demo can show all three lists; a ⬜ means that column will show a placeholder instead of fabricated recommendations.
+
 
 ---
 
-## 4. Rehearsal checklist
+## 5. Rehearsal checklist
 
 - [ ] Read the speaker notes aloud once; mark words you stumble on and simplify them
 - [ ] Time it with a stopwatch — target **4:45**, hard stop at 5:00
+- [ ] Rehearse the **window switch** at least twice; it is the only choreography
 - [ ] For each figure, say *what to look at* before *what it means* (point, then interpret)
-- [ ] Prepare the Streamlit window in advance; do not debug the demo live
 - [ ] Decide who answers which Q&A area (results / method / models)
 - [ ] Have the number sheet in hand: 0.0641 · 0.0775 · 0.2272 · baseline 0.0353

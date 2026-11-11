@@ -39,7 +39,7 @@ SLIDES: list[dict] = [
             ("", 0),
             ("What we will cover: the models, the results, and what we learned from them", 0),
         ],
-        "seconds": 10,
+        "seconds": 14,
         "notes": (
             "Good morning. We built a movie recommender on MovieLens-1M and compared three "
             "models under one fixed protocol. I will skip the implementation and focus on "
@@ -59,7 +59,7 @@ SLIDES: list[dict] = [
             ("41.8% of test targets are rated 3 stars or less — a rating threshold would mark them irrelevant", 1),
             ("Two views of the same score matrix: full ranking over 3,416 items (primary), 1 + 100 candidates (secondary)", 0),
         ],
-        "seconds": 30,
+        "seconds": 37,
         "notes": (
             "The task is top-10 recommendation with leave-one-out: the user's last interaction "
             "is held out and must be ranked inside the top 10. "
@@ -91,7 +91,7 @@ SLIDES: list[dict] = [
         "bullets": [
             ("Same interaction matrix for all three; only the inductive bias differs", 0),
         ],
-        "seconds": 45,
+        "seconds": 35,
         "notes": (
             "We deliberately picked three different families. "
             "Item-CF is the lecture baseline: it only knows which movies co-occur. "
@@ -109,16 +109,18 @@ SLIDES: list[dict] = [
         "title": "Results: full ranking, held-out test set",
         "kicker": "All numbers on the same split, the same candidates and the same metric code",
         "figure": "results_full.png",
+        "fig_w": 6.75,
         "table": {
             "header": ["Model", "Recall@10", "NDCG@10", "vs Item-CF"],
-            "widths": [2.8, 2.6, 2.6, 2.6],
+            "widths": [2.2, 2.2, 2.4, 2.6],
+            "font": 14,
             "rows": [
                 ["Item-CF", "0.0641", "0.0335", "—"],
                 ["LightFM", "0.0775", "0.0398", "+20.9%"],
                 ["LRURec", "0.2272", "0.1233", "+254%"],
             ],
         },
-        "seconds": 45,
+        "seconds": 34,
         "notes": (
             "Here is the main table. Item-CF reaches 0.0641 recall at 10, LightFM 0.0775, "
             "and LRURec 0.2272. The popularity baseline is 0.0353, so every model beats it, "
@@ -145,7 +147,7 @@ SLIDES: list[dict] = [
             ("Adding user and item identity columns took it to 0.077–0.093", 0),
             ("Root cause: metadata alone produces only 241 distinct user vectors for 6,040 users", 0),
         ],
-        "seconds": 50,
+        "seconds": 44,
         "notes": (
             "This is the finding I find most useful. We swept twenty LightFM configurations on "
             "the validation set. The first thirteen varied components, learning rate, epochs and "
@@ -171,7 +173,7 @@ SLIDES: list[dict] = [
             ("Gains concentrate in the mid-tail: 94% of LightFM's improvement comes from 100–1,499 ratings", 0),
             ("At the head (1,500+ ratings) all three converge — order and metadata add little", 0),
         ],
-        "seconds": 45,
+        "seconds": 36,
         "notes": (
             "This chart slices the same test set by how many training ratings the target movie has. "
             "Two things stand out. First, below one hundred ratings every model is essentially at "
@@ -195,7 +197,7 @@ SLIDES: list[dict] = [
             ("Consequence: validation is used only to choose configurations; the test set is evaluated once", 0),
             ("Caveats we state openly: LRURec trained for 5 epochs under a fixed budget, and its test run is a repeat on a set examined earlier", 0),
         ],
-        "seconds": 40,
+        "seconds": 35,
         "notes": (
             "One methodological point we care about. Validation numbers are systematically "
             "optimistic on this split: LightFM scores 0.0919 on validation but 0.0775 on test. "
@@ -218,7 +220,7 @@ SLIDES: list[dict] = [
             ("Model choice is regime-dependent — head, mid-tail and cold items reward different models", 0),
             ("Still open: zero-interaction items. Genres are too coarse; the title text is the next place to look", 0),
         ],
-        "seconds": 25,
+        "seconds": 20,
         "notes": (
             "To summarise: comparability came first and made the rest possible; feature design beat "
             "tuning by a wide margin; and model choice depends on which regime you care about. "
@@ -228,6 +230,38 @@ SLIDES: list[dict] = [
         "hints": "20 秒收尾。最后一句「happy to take questions」要说得清楚，然后停住，等主持人接。",
     },
 ]
+
+# ---------------------------------------------------------------------------
+# Live demo segment — no slide of its own, played right after slide 4.
+# The deck totals 255s; this adds 30s, for 4:45 of the 5:00 budget.
+# ---------------------------------------------------------------------------
+DEMO = {
+    "label": "Live demo — Streamlit, one user, three models side by side",
+    "seconds": 30,
+    "after_slide": 4,
+    "script": (
+        "Let me show this working. I will pick a user, and you will see all three models "
+        "rank movies for the same person, side by side. Same user, same catalogue, three "
+        "very different lists — and the third one, the sequential model, is the one that "
+        "most often recovers a title the user actually watched: 22.7 percent of users "
+        "against 6.4 for the first column."
+    ),
+    "hint": "演示 30 秒：只点一次「随机换一个」，指着三列说同一句话就切回。不要现场调参、不要滚页面。",
+    # 台上必须一眼看懂的，只保留这三块（列的定义放 Q&A）
+    "on_screen": [
+        ("Top panel", "three algorithms × two evaluation views — full ranking and 101-candidate"),
+        ("Tab 1", "one user, three recommendation lists side by side, ranks 1–10"),
+        ("The one thing to say", "only the ranks are comparable; each Score lives on its own scale"),
+    ],
+    # 精确动作，按顺序念给自己听
+    "walkthrough": [
+        "Click **🎲 Random user** exactly once. Nothing else on this page.",
+        "Read the user line aloud: gender · age · occupation · number of ratings.",
+        "Point at the three columns; name the gap: only the third list routinely recovers "
+        "what the user actually watched — 22.7% of users against 6.4% for Item-CF.",
+        "Stop. **Do not open the expanders on stage** — they are Q&A material, not demo material.",
+    ],
+}
 
 # ---------------------------------------------------------------------------
 # Anticipated questions (5-minute Q&A). Not shown on slides.
@@ -254,4 +288,42 @@ QA: list[tuple[str, str]] = [
     ("What would you do with more time?",
      "A cold-item hold-out experiment: remove all ratings of a random 20% of warm movies, retrain, and "
      "measure whether metadata can recover them. And use the movie-title text, since genres are too coarse."),
+
+    # ---- demo-screen questions (detail deliberately kept out of the demo block) ----
+    ("Walk me through the results table at the top of the demo.",
+     "**Full R@10 / Full NDCG@10** rank the held-out item against all 3,416 movies — that is the "
+     "primary view and the one we quote. **Cand R@10 / Cand NDCG@10** rank it inside 1 positive plus "
+     "100 sampled negatives; that is the secondary view, kept only for comparability with papers that "
+     "use a 1+99 protocol. The two are not comparable in absolute value, because the candidate view "
+     "has 33× fewer distractors."),
+    ("Why are the three Score columns on completely different scales?",
+     "Because each model's score means something different. **Item-CF** sums item-item similarities "
+     "and lands around 1.8–4.2. **LightFM** is a dot product plus user and item biases, and under WARP "
+     "those biases drift together, so the score matrix sits around −751 to −290 — negative values are "
+     "expected. **LRURec** is the dot product of a sequence state with an item embedding. Only the "
+     "ordering is meaningful, so we compare ranks and never raw scores across columns."),
+    ("What is the Split column in the history table?",
+     "It shows where each rating lives in our leave-one-out protocol. `train` is what every model "
+     "learns from; `val` was used only to choose hyper-parameters; `test` is the single held-out rating "
+     "that the metric tries to rank inside the top ten. A model never sees its own `test` row — we show "
+     "it on screen so the audience can see what is being predicted."),
+    ("What do Cohort affinity and Rated by mean in Tab 2?",
+     "**Cohort affinity** = Σ max(rating − 3, 0) ÷ (number of raters + 10) across the matched cohort. "
+     "Only 4- and 5-star ratings count, and the +10 shrinkage stops a movie with three enthusiastic "
+     "raters from topping the list. **Rated by** is how many cohort members rated that movie; anything "
+     "below 15 raters is dropped before ranking."),
+    ("What happens if a profile matches too few users?",
+     "The cohort builder relaxes conditions in a fixed order — first drop the genre filter, then the "
+     "age filter — and says so in the UI, for example 'genre filter too strict (21 users) — relaxed to "
+     "any genre'. It never silently proceeds on a cohort too small to be meaningful."),
+    ("Some numbers in the demo table carry an asterisk. Why?",
+     "LightFM's owner did not commit its metrics JSON, so the full-ranking numbers were recomputed by "
+     "`src/verify_results.py` from the committed top-10 export — no model code involved. The "
+     "candidate-mode numbers cannot be derived from a top-10 export at all, so those two are **cited** "
+     "from the owner's documentation and marked with an asterisk. Everything else in the table is the "
+     "owner's own evaluation output."),
+    ("What do the ✅ / ⬜ cards under the title mean?",
+     "They only report whether that model's `top10.parquet` was found in the repository. Three ✅ means "
+     "the demo can show all three lists; a ⬜ means that column will show a placeholder instead of "
+     "fabricated recommendations."),
 ]

@@ -1,0 +1,27 @@
+{
+  "model": "itemcf",
+  "recomputed": true,
+  "source": "recomputed by src/verify_results.py from results/itemcf/top10_eval.parquet (no model code involved)",
+  "protocol": {
+    "split": "test",
+    "k": 10,
+    "mode": "full",
+    "exclude": [
+      "train",
+      "val"
+    ]
+  },
+  "reports": {
+    "full": {
+      "model": "itemcf",
+      "mode": "full",
+      "split": "test",
+      "k": 10,
+      "n_users": 6040,
+      "recall": 0.06407284768211921,
+      "ndcg": 0.03346998325072716,
+      "hr": 0.06407284768211921
+    }
+  },
+  "note": "full-mode numbers are recomputed here from the committed top-10 export. candidates-mode cannot be derived from a top-10 export; where it appears it is cited from the owner's documentation and marked with _source."
+}

@@ -73,6 +73,7 @@ def find_metrics(slug: str) -> Path | None:
         RESULTS_DIR / slug / f"{slug}_test.json",
         RESULTS_DIR / slug / "test.json",
         OUTPUTS_DIR / "metrics" / f"{slug}_test.json",
+        RESULTS_DIR / slug / "metrics_recomputed.json",   # 见 src/verify_results.py
     ])
 
 
@@ -117,13 +118,28 @@ def load_top10(slug: str):
 
 @st.cache_data(show_spinner=False)
 def load_metrics(slug: str) -> dict | None:
+    """返回完整 payload（含 reports 与 provenance），缺文件返回 None。"""
     path = find_metrics(slug)
     if path is None:
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8")).get("reports", {})
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         return None
+    if not payload.get("reports"):
+        return None
+    payload["_file"] = path.name
+    payload["_recomputed"] = bool(payload.get("recomputed"))
+    return payload
+
+
+def metrics_sources() -> dict[str, str]:
+    """每个模型实际用的是哪份指标文件（用于界面上的来源说明）。"""
+    out = {}
+    for name in MODELS:
+        p = find_metrics(MODEL_SLUG[name])
+        out[name] = p.name if p else "—"
+    return out
 
 
 # =============================================================================
@@ -154,23 +170,30 @@ def recommend_table(df_top10: pd.DataFrame, uid: int, movies: pd.DataFrame) -> p
 
 
 def metrics_table() -> pd.DataFrame:
+    """三个模型的 test 指标。数值统一格式化为字符串，"*" 表示引用值而非独立复算。"""
+
+    def cell(d: dict, key: str, suffix: str = "") -> str:
+        v = d.get(key)
+        return f"{v:.4f}{suffix}" if isinstance(v, (int, float)) else "—"
+
     rows = []
     for name in MODELS:
-        rep = load_metrics(MODEL_SLUG[name])
-        if not rep:
-            rows.append({"Model": name, "Full R@10": None, "Full NDCG@10": None,
-                         "Cand R@10": None, "Cand NDCG@10": None})
+        payload = load_metrics(MODEL_SLUG[name])
+        if not payload:
+            rows.append({"Model": name, "Full R@10": "—", "Full NDCG@10": "—",
+                         "Cand R@10": "—", "Cand NDCG@10": "—"})
             continue
-        f, c = rep.get("full", {}), rep.get("candidates", {})
+        f = payload["reports"].get("full", {})
+        c = payload["reports"].get("candidates", {})
+        star = "*" if c.get("_source") else ""
         rows.append({
             "Model": name,
-            "Full R@10": round(f.get("recall", float("nan")), 4),
-            "Full NDCG@10": round(f.get("ndcg", float("nan")), 4),
-            "Cand R@10": round(c.get("recall", float("nan")), 4),
-            "Cand NDCG@10": round(c.get("ndcg", float("nan")), 4),
+            "Full R@10": cell(f, "recall"),
+            "Full NDCG@10": cell(f, "ndcg"),
+            "Cand R@10": cell(c, "recall", star),
+            "Cand NDCG@10": cell(c, "ndcg", star),
         })
-    df = pd.DataFrame(rows).set_index("Model")
-    return df.astype(object).where(df.notna(), "—")
+    return pd.DataFrame(rows).set_index("Model")
 
 
 def history_block(uid: int, ratings: pd.DataFrame, movies: pd.DataFrame) -> pd.DataFrame:
@@ -216,6 +239,19 @@ def main() -> None:
         st.caption(
             "Validation was used only to choose configurations; every number above is test."
         )
+        _src = metrics_sources()
+        _recomputed = [n for n in MODELS if _src[n] == "metrics_recomputed.json"]
+        st.caption(
+            "Metric file per model: "
+            + " · ".join(f"**{n}** ← `{_src[n]}`" for n in MODELS)
+        )
+        if _recomputed:
+            st.caption(
+                f"⚠️ **{', '.join(_recomputed)}** has no owner-exported `*_test.json` in the repo. "
+                "Its full-ranking numbers were **recomputed from the committed "
+                "`top10_eval.parquet`** by `python -m src.verify_results` (no model code involved), "
+                "so the candidate columns stay empty — those cannot be derived from a top-10 export."
+            )
 
     # ---- artifact status ----
     status = {n: find_top10(MODEL_SLUG[n]) is not None for n in MODELS}
@@ -266,6 +302,12 @@ def main() -> None:
         with st.expander("Last 10 ratings of this user (models only ever saw the train split)"):
             st.dataframe(history_block(uid, ratings, movies),
                          use_container_width=True, hide_index=True)
+            st.caption(
+                "**Rating** = the 1–5 stars this user gave. **Split** = where that rating lives in "
+                "our leave-one-out protocol: `train` is what every model learns from, `val` was "
+                "used to choose configurations, and `test` is the single held-out rating that our "
+                "metric tries to rank inside the top 10. A model never sees its own `test` row."
+            )
 
         st.divider()
         cols = st.columns(len(MODELS))
@@ -288,6 +330,12 @@ def main() -> None:
                 else:
                     st.dataframe(tbl, use_container_width=True, hide_index=True)
 
+        st.caption(
+            "**Rank** is 1–10 *within each model*, so the three lists are directly comparable. "
+            "**Score** is that model's internal ranking value — Item-CF sums item-item "
+            "similarities, while LightFM and LRURec are dot products plus biases — so compare "
+            "ranks, never raw scores across the three columns."
+        )
         st.caption(
             "Recommendations exclude every movie the user has rated "
             "(train ∪ val ∪ test), matching the brief: "
@@ -345,6 +393,11 @@ def main() -> None:
                     "Score": round(float(res["scores"][iid]), 4),
                 })
             st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+            st.caption(
+                "**Score** = sum of item-item similarities between this movie and the borrowed "
+                "pseudo-history. It is the same quantity Item-CF uses in Tab 1, so the two are "
+                "comparable here — but still not comparable to LightFM or LRURec scores."
+            )
 
             with st.expander("How this was computed (the borrowed pseudo-history)"):
                 st.markdown(
@@ -363,6 +416,12 @@ def main() -> None:
                         "Rated by": int(res["n_raters"][iid]),
                     })
                 st.dataframe(pd.DataFrame(prow), use_container_width=True, hide_index=True)
+                st.caption(
+                    "**Cohort affinity** = Σ max(rating − 3, 0) ÷ (raters + 10) over the matched "
+                    "cohort, so only 4–5 star ratings count and thinly-rated movies are shrunk "
+                    "towards zero. **Rated by** = how many cohort members rated that movie; "
+                    "movies rated by fewer than 15 are dropped before ranking."
+                )
 
             st.caption(
                 "This is an **approximation** of cold start and doubles as a control baseline. "
