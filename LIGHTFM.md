@@ -22,7 +22,7 @@
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
-| 适配器 | `src/adapters/lightfm.py` | `LightFMAdapter` + 特征构造 + 5 个子命令（`--eval/--tune/--analyze/--top/--from-params`） |
+| 适配器 | `src/adapters/lightfm.py` | `LightFMAdapter` + 特征构造 + 6 个子命令（`--eval/--tune/--analyze/--export/--top/--from-params`） |
 | 基类（共用） | `src/adapters/base.py` | `AdapterBase` + 注册表；`"lightfm"` 已登记（`_BUILTIN`） |
 | test 指标 | `outputs/metrics/lightfm_test.json` | full / candidates 两种模式 |
 | 最终超参 | `outputs/metrics/lightfm_params.json` | c=32 · warp · ep=20 · lr=0.05 · ms=100 · identity=true，含 `selection` 出处 |
@@ -129,7 +129,13 @@ python -m src.adapters.lightfm --eval          # 训练 + test 评估 + 导出 t
 python -m src.adapters.lightfm --tune          # 在 val 上搜 20 组配置（约 35 分钟；--resume 可续跑）
 python -m src.adapters.lightfm --analyze       # 生成错误分析表 + 两张图（重训一次，约 3 分钟）
 python -m src.adapters.lightfm --top --uid 42  # 看某个用户的推荐
+python -m src.adapters.lightfm --export        # 导出 results/lightfm/（演示 + 交叉验证，约 3 分钟）
 ```
+
+`--export` 一次训练写 5 个文件到 `results/lightfm/`：`top10.parquet`（部署口径，排除 train∪val∪test）、
+`top10_eval.parquet`（评估口径，只排除 train∪val，保留 test 目标供别人用 `evaluate.py` 复算）、
+`params.json`、两张图。两份 parquet 都是 60,400 行、列为 `uid,rank,iid,score`，
+且用稳定排序取 top-10（同分下标小者在前），与 `evaluate.py` 的名次定义逐位一致。
 
 **`--eval` / `--top` / `--analyze` 默认读取 `outputs/metrics/lightfm_params.json`** ——
 配置一旦定稿就不该靠"记得加 flag"来保证一致；命令行参数仍然优先，可临时覆盖做实验。

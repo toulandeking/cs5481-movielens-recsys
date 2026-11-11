@@ -1,0 +1,42 @@
+{
+  "model": "LightFM",
+  "seed": 42,
+  "params": {
+    "no_components": 32,
+    "loss": "warp",
+    "epochs": 20,
+    "learning_rate": 0.05,
+    "item_alpha": 0.0,
+    "user_alpha": 0.0,
+    "max_sampled": 100,
+    "num_threads": 4,
+    "identity": true
+  },
+  "features": {
+    "n_user_features": 6070,
+    "n_item_features": 3444
+  },
+  "fit_seconds": 171.75,
+  "interactions_nnz": 987531,
+  "n_users": 6040,
+  "n_items": 3416,
+  "lightfm_version": "1.16",
+  "selection": {
+    "rule": "1se",
+    "n_configs": 20,
+    "best_group": 17,
+    "best_val_recall@10": 0.092881,
+    "best_val_ndcg@10": 0.04466,
+    "std_err": 0.007579,
+    "threshold": 0.085302,
+    "n_eligible": 2,
+    "chosen_group": 16,
+    "chosen_val_recall@10": 0.091887,
+    "chosen_val_ndcg@10": 0.043921
+  },
+  "tuning": {
+    "csv": "outputs\\metrics\\lightfm_tuning_val.csv",
+    "split": "val",
+    "note": "val 绝对值比 test 系统性偏高约 0.015（DATA.md §6.5），只用于相对排序"
+  }
+}

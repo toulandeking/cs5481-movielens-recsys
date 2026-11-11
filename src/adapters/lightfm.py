@@ -504,6 +504,7 @@ USAGE = """用法:
   python -m src.adapters.lightfm --top --uid N [超参...]  某个用户的前 10 推荐
   python -m src.adapters.lightfm --tune [--resume]        在 val 上扫超参网格
   python -m src.adapters.lightfm --analyze                错误分析表 + 两张图（重训同一模型）
+  python -m src.adapters.lightfm --export                 导出 results/lightfm/（演示 + 交叉验证用）
 
 超参（默认值来自 outputs/metrics/lightfm_params.json，显式 flag 优先）:
   --components INT    隐向量维度 (默认 32)
@@ -673,6 +674,93 @@ def _export_top10(model: LightFMAdapter) -> None:
     p = d / "lightfm.parquet"
     df.to_parquet(p, index=False)
     print(f"  top-10 → {p.relative_to(OUTPUT_DIR.parent)}  ({len(df):,} 行)")
+
+
+# =============================================================================
+# 交付导出：results/<model>/ 固定布局（演示界面 + 别人独立复算用）
+# =============================================================================
+RESULTS_DIR = OUTPUT_DIR.parent / "results"
+
+
+def _rated_mask(splits: tuple[str, ...]) -> np.ndarray:
+    """(N_USERS, N_ITEMS) bool：该用户在指定 split 集合里评过的影片。"""
+    r = read_canon_table("ratings")
+    sel = r[r["split"].isin(splits)]
+    mask = np.zeros((N_USERS, N_ITEMS), dtype=bool)
+    mask[sel["uid"].to_numpy(), sel["iid"].to_numpy()] = True
+    return mask
+
+
+def _top10_frame(scores: np.ndarray, splits: tuple[str, ...]) -> pd.DataFrame:
+    """按"排除 splits 里评过的影片"的口径取 top-10。
+
+    用 `np.argsort(-S, kind="stable")` 而不是 `base.top_k_indices`（后者是
+    argpartition + lexsort）：当第 10 名与第 11 名分数**完全相等**时，argpartition
+    选谁是不确定的，而评估口径明确规定"同分下标小者在前"；这里按评估口径取，
+    保证导出的东西能被 `evaluate.py` 逐位复算。
+    """
+    S = np.array(scores, dtype=np.float32, copy=True)
+    S[_rated_mask(splits)] = -np.inf
+    idx = np.argsort(-S, axis=1, kind="stable")[:, :K]
+    return pd.DataFrame({
+        "uid": np.repeat(np.arange(N_USERS, dtype=np.int32), K),
+        "rank": np.tile(np.arange(1, K + 1, dtype=np.int8), N_USERS),
+        "iid": idx.astype(np.int32).ravel(),
+        "score": np.take_along_axis(S, idx, axis=1).astype(np.float32).ravel(),
+    })
+
+
+def cmd_export(model: LightFMAdapter) -> int:
+    """一次训练，导出演示界面与交叉验证需要的全部文件到 results/lightfm/。"""
+    _fit_and_report(model)
+    S = model.score_matrix()
+
+    out = RESULTS_DIR / "lightfm"
+    out.mkdir(parents=True, exist_ok=True)
+
+    deploy = _top10_frame(S, (SPLIT_TRAIN, SPLIT_VAL, SPLIT_TEST))
+    evaluate_top = _top10_frame(S, (SPLIT_TRAIN, SPLIT_VAL))     # 保留 test 目标
+
+    p_dep = out / "top10.parquet"
+    p_eval = out / "top10_eval.parquet"
+    deploy.to_parquet(p_dep, index=False)
+    evaluate_top.to_parquet(p_eval, index=False)
+    print(f"\n  top10（部署口径，排除 train∪val∪test）→ {p_dep}  ({len(deploy):,} 行)")
+    print(f"  top10（评估口径，只排除 train∪val）   → {p_eval}  ({len(evaluate_top):,} 行)")
+
+    # 自检：部署口径不得命中任何已评影片；两份文件的 test 目标命中数必须等于 json 里的命中数
+    rated = _rated_mask((SPLIT_TRAIN, SPLIT_VAL, SPLIT_TEST))
+    leaked = int(rated[deploy["uid"].to_numpy(), deploy["iid"].to_numpy()].sum())
+    te = read_canon_table("ratings")
+    te = te[te["split"] == SPLIT_TEST][["uid", "iid"]]
+    mine = evaluate_top.merge(te, on=["uid", "iid"], how="inner")
+    print(f"  自检：部署口径命中已评影片 {leaked} 行（应为 0）；"
+          f"评估口径里 test 目标出现在 top-10 的用户 {len(mine):,} / {N_USERS:,}")
+
+    payload = _params_payload(model)
+    if PARAMS_PATH.is_file():
+        old = json.loads(PARAMS_PATH.read_text(encoding="utf-8"))
+        payload = {**old, **payload}
+    p_params = out / "params.json"
+    p_params.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  params → {p_params}")
+
+    for name in ("lightfm_tuning_sensitivity.png", "lightfm_popularity_bias.png"):
+        src = OUTPUT_DIR / "figures" / name
+        if src.is_file():
+            (out / name).write_bytes(src.read_bytes())
+            print(f"  图 → {out / name}")
+        else:
+            print(f"  [跳过] {src} 不存在（先跑 --analyze）")
+
+    from src.evaluate import evaluate_all, print_reports
+
+    reports = evaluate_all(S, model=model.name)
+    print_reports(reports, f"LightFM 评估（test，K={K}）—— 权威口径，唯一出口")
+    full = reports["full"]
+    print(f"  交叉验证锚点：full Recall@10={full.recall:.6f} "
+          f"（top10_eval.parquet 的命中率应为 {len(mine) / N_USERS:.6f}）")
+    return 0
 
 
 # =============================================================================
@@ -1105,7 +1193,7 @@ def cmd_analyze(model: LightFMAdapter) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if not argv or not ({"--eval", "--top", "--tune", "--analyze"} & set(argv)):
+    if not argv or not ({"--eval", "--top", "--tune", "--analyze", "--export"} & set(argv)):
         print(USAGE)
         return 2
 
@@ -1113,6 +1201,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_tune(argv)
 
     model = _build_model(argv)
+    if "--export" in argv:
+        return cmd_export(model)
     if "--eval" in argv:
         return cmd_eval(model)
     if "--analyze" in argv:

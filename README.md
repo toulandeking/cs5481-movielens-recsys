@@ -36,10 +36,12 @@ data/canon/*.parquet          ← 冻结的数据契约，所有人只读这里
               ▼
     src/evaluate.py           ← 指标的唯一出口（full / candidates 两种模式）
               ▼
-    outputs/{metrics,figures,top10}  →  app/ 演示界面
+    outputs/{metrics,figures,top10}  ┐
+    results/<model>/（交付物：top10 + 参数 + 图）├→  app/ 演示界面（只读文件，不加载模型）
 ```
 
-> 三个模型适配器均已实现；`app/` 是计划中的 Streamlit 界面。LRURec 的本机运行步骤见 [LRUREC.md](LRUREC.md)。
+> 三个模型适配器与 Streamlit 界面均已实现。指标与调参产物写 `outputs/`（被 `.gitignore` 忽略），
+> 需要提交给界面/老师看的交付物放 `results/<model>/`。LRURec 的本机运行步骤见 [LRUREC.md](LRUREC.md)。
 
 **三条设计约束**（保证三个模型的数字可比）：
 
@@ -117,6 +119,7 @@ python -m src.adapters.lightfm --tune      # 在 val 上搜超参（20 组，约
 python -m src.adapters.lightfm --eval      # test 评估 + 导出 top-10（约 3 分钟）
 python -m src.adapters.lightfm --analyze   # 错误分析表 + 两张图
 python -m src.adapters.lightfm --top --uid 42   # 查看某个用户的推荐
+python -m src.adapters.lightfm --export    # 导出 results/lightfm/（演示 + 交叉验证，约 3 分钟）
 
 # LRURec（独立 .venv-lrurec-cuda 环境，完整新20组，详见 LRUREC.md）
 python -m src.adapters.lrurec_fresh20 --run-dir outputs/lrurec_run20 --workers 1 --device cuda
@@ -185,8 +188,8 @@ streamlit run app/streamlit_app.py
 | 适配层基类 | ✅ 完成 | `AdapterBase` + 模型注册表 |
 | **Item-CF** | ✅ 完成 | 调参、评估、错误分析、演示导出 |
 | **LightFM** | ✅ 完成 | 调参、评估、错误分析、演示导出；test Recall@10 = 0.0775 |
-| LRURec | ✅ 完成 | 全新 20 组，旧结果不计；GPU 每组最多 5 epoch；full test Recall@10=0.2272；见 LRUREC.md |
-| Streamlit 演示 | 🟡 可用（待补 2 个模型产物） | 界面已完成并验证；目前只有 ItemCF 的 `top10.parquet`，LightFM / LRURec 到货后自动显示 |
+| LRURec | ✅ 完成 | 全新 20 组，旧结果不计；GPU 每组最多 5 epoch；full test Recall@10=0.2272；见 [LRUREC.md](LRUREC.md) |
+| Streamlit 演示 | 🟡 可用（交付物 1/3） | 界面已完成并验证（`app/streamlit_app.py`）；**LightFM** 的 `results/lightfm/top10.parquet` 已提交，**Item-CF** 与 **LRURec** 需本地生成（`python -m src.adapters.itemcf --eval`、见 LRUREC.md），缺产物时界面显示「待生成」，补上文件刷新即可 |
 | 技术报告 | ⬜ 进行中 | 数据及三个算法章节素材已就绪，待整合 |
 | 课堂演示材料 | ⬜ 待准备 | 5 分钟，需覆盖 task / data / 三算法 / evaluation / main findings |
 
@@ -230,6 +233,7 @@ streamlit run app/streamlit_app.py
 | LightFM 图：超参/特征敏感性 | `outputs/figures/lightfm_tuning_sensitivity.png` |
 | LightFM 图：流行度偏置 | `outputs/figures/lightfm_popularity_bias.png` |
 | LightFM 推荐结果（演示用） | `outputs/top10/lightfm.parquet` |
+| **LightFM 交付目录（演示界面 + 交叉验证，`--export` 生成）** | `results/lightfm/`：`top10.parquet` / `top10_eval.parquet` / `params.json` / 两张图，说明见 `results/lightfm/README.md` |
 | LRURec 指标（两模式） | [results/lrurec/lrurec_test.json](results/lrurec/lrurec_test.json) |
 | LRURec 调参记录（全新 20 组） | [results/lrurec/lrurec_tuning_val.csv](results/lrurec/lrurec_tuning_val.csv) |
 | LRURec 最终超参 | [results/lrurec/lrurec_params.json](results/lrurec/lrurec_params.json) |
