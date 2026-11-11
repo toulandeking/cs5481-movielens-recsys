@@ -18,8 +18,11 @@ matplotlib>=3.7      # 验证版本 3.10.x （--analyze 出图）
 # lightfm==1.16       # 验证版本 1.16（仅 Linux/Colab 可用 1.17+）
 # LRURec CPU 可用本文件；CUDA 精确版本见 requirements-lrurec-cuda.txt
 
-# ---- 演示层（可选，做 Streamlit 时再装）----
-# streamlit>=1.30
+# ---- 演示层（Streamlit 界面）----
+# 只需读 outputs|results 下的 top10.parquet，不加载任何模型，因此与算法环境无关
+streamlit>=1.30      # 验证版本待补；启动：streamlit run app/streamlit_app.py
+
+# ---- 算法层 ----
 torch>=2.0  # LRURec; CUDA experiment uses the separate pinned requirements file
 
 # 当前 LRURec 全新20组使用独立 CUDA 环境，torch 2.7.1+cu128；安装与验收见 LRUREC.md。

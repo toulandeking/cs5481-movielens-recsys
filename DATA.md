@@ -484,4 +484,4 @@ movies  = pd.read_csv('ml-1m/movies.dat',  sep='::', header=None, engine='python
 | 日期 | 变更 |
 |---|---|
 | 2026-10-28 | 建立文档；完成数据侦察与四项决策（D1 全部交互为正 / D2 物品 `≥5` 过滤 / D4 全量排序为主 / D3 暂缓）；`contract.py` + `build_canon.py` 完成并生成 canon（`N_ITEMS=3,416`，train/val/test = 987,531 / 6,040 / 6,040）；canon 存储切换为 parquet；修复 `genres` 被读成 ndarray 的问题；记录 val/test 难度差异（§6.5） |
-| 2026-11-09 | LRURec 接入并完成十组验证集调参；D3 定稿 `maxlen=200`，训练/推理协议见 LRUREC.md；不修改 canon 切分。 |
+| 2026-11-09 | LRURec 接入并完成**全新 20 组**验证集调参（旧 10 组不计）；D3 定稿 **`maxlen=50`**，训练/推理协议见 [LRUREC.md](LRUREC.md)；不修改 canon 切分。 |
