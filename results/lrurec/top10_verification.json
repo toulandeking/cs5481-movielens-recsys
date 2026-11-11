@@ -1,0 +1,48 @@
+{
+  "model": "lrurec",
+  "source": "outputs/lrurec_fresh20_cuda_20261109/scores/lrurec_test.npy",
+  "reference": "outputs/lrurec_fresh20_cuda_20261109/metrics/lrurec_test.json",
+  "columns": [
+    "uid",
+    "rank",
+    "iid",
+    "score"
+  ],
+  "uid_range": [
+    0,
+    6039
+  ],
+  "iid_range": [
+    0,
+    3415
+  ],
+  "rank_range": [
+    1,
+    10
+  ],
+  "demo_excludes": [
+    "train",
+    "val",
+    "test"
+  ],
+  "eval_excludes": [
+    "train",
+    "val"
+  ],
+  "context": "train only; unchanged from frozen experiment",
+  "eval_mode": "full catalog (not 101 candidates)",
+  "test_hits": 1372,
+  "recall_at_10": 0.2271523178807947,
+  "ndcg_at_10": 0.12328319157758873,
+  "matches_evaluate_py_and_frozen_report": true,
+  "files": {
+    "top10.parquet": {
+      "rows": 60400,
+      "sha256": "0812fb039eef700852c29d168f72862e9cb2f410ccf179aee8675e2e2d709b77"
+    },
+    "top10_eval.parquet": {
+      "rows": 60400,
+      "sha256": "f897f4c70c3a2175f0b3c9cefb0da77ffa2b16af8aceb52558cd4a070df46998"
+    }
+  }
+}
