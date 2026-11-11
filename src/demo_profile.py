@@ -91,7 +91,11 @@ def _genre_mask(genres: tuple[str, ...]) -> np.ndarray:
 
 
 def build_cohort(profile: Profile, min_size: int = MIN_COHORT) -> tuple[np.ndarray, list[str]]:
-    """筛出符合画像的真实用户。命中太少时按序放宽条件，并记录放宽了什么。"""
+    """筛选符合画像的真实用户。命中太少时按序放宽条件，并记录放宽了什么。
+
+    ⚠️ 返回的 `notes` 会**直接显示在英文演示界面**（app/streamlit_app.py），
+    因此这里的提示字符串一律用英文。命令行输出同样使用这些字符串。
+    """
     users = read_canon_table("users")
     ratings = read_canon_table("ratings")
     train = ratings[ratings["split"] == SPLIT_TRAIN]
@@ -104,9 +108,9 @@ def build_cohort(profile: Profile, min_size: int = MIN_COHORT) -> tuple[np.ndarr
 
     notes: list[str] = []
     if profile.gender:
-        notes.append(f"性别={profile.gender}")
+        notes.append(f"gender={profile.gender}")
     if profile.age_group:
-        notes.append(f"年龄段={profile.age_group}")
+        notes.append(f"age={profile.age_group}")
 
     # 类型条件：至少在所选类型上有 1 条 ≥4 星评分
     if profile.genres:
@@ -115,7 +119,7 @@ def build_cohort(profile: Profile, min_size: int = MIN_COHORT) -> tuple[np.ndarr
         liked = liked[gmask[liked["iid"].to_numpy()]]
         genre_uids = set(liked["uid"].unique().tolist())
         mask &= users["uid"].map(lambda u: u in genre_uids).to_numpy()
-        notes.append("喜欢 " + "/".join(profile.genres))
+        notes.append("likes " + "/".join(profile.genres))
 
     cohort = users.loc[mask, "uid"].to_numpy()
     if len(cohort) >= min_size:
@@ -125,12 +129,16 @@ def build_cohort(profile: Profile, min_size: int = MIN_COHORT) -> tuple[np.ndarr
     if profile.genres:
         relaxed = Profile(profile.gender, profile.age_group, ())
         c, _ = build_cohort(relaxed, min_size)
-        notes.append(f"⚠️ 类型条件过严（仅 {len(cohort)} 人），已放宽为不限类型")
+        notes.append(
+            f"genre filter too strict ({len(cohort)} users) — relaxed to any genre"
+        )
         return c, notes
     if profile.age_group:
         relaxed = Profile(profile.gender, None, ())
         c, _ = build_cohort(relaxed, min_size)
-        notes.append(f"⚠️ 年龄段过严（仅 {len(cohort)} 人），已放宽为不限年龄")
+        notes.append(
+            f"age filter too strict ({len(cohort)} users) — relaxed to any age"
+        )
         return c, notes
     return cohort, notes
 
@@ -170,7 +178,9 @@ def recommend_for_profile(
     """完整流程：画像 → 人群 → 伪历史 → Item-CF 扩散 → 推荐。"""
     cohort, notes = build_cohort(profile)
     if len(cohort) == 0:
-        raise RuntimeError("该画像下没有匹配到任何用户，请放宽条件")
+        raise RuntimeError(
+            "no user matches this profile — please relax the filters"
+        )
 
     affinity, n_raters = cohort_affinity(cohort)
     gmask = _genre_mask(profile.genres)

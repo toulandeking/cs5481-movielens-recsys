@@ -1,0 +1,48 @@
+{
+  "model": "itemcf",
+  "source": "ItemCF fit on train with outputs/metrics/itemcf_params.json",
+  "reference": "outputs/metrics/itemcf_test.json",
+  "columns": [
+    "uid",
+    "rank",
+    "iid",
+    "score"
+  ],
+  "uid_range": [
+    0,
+    6039
+  ],
+  "iid_range": [
+    0,
+    3415
+  ],
+  "rank_range": [
+    1,
+    10
+  ],
+  "demo_excludes": [
+    "train",
+    "val",
+    "test"
+  ],
+  "eval_excludes": [
+    "train",
+    "val"
+  ],
+  "context": "train only; unchanged from frozen experiment",
+  "eval_mode": "full catalog (not 101 candidates)",
+  "test_hits": 387,
+  "recall_at_10": 0.06407284768211921,
+  "ndcg_at_10": 0.03346998325072717,
+  "matches_evaluate_py_and_frozen_report": true,
+  "files": {
+    "top10.parquet": {
+      "rows": 60400,
+      "sha256": "9ce94ff581951b97b23e4ce7e362ec7207de808e8a88dc24ae3c47f8e82767e4"
+    },
+    "top10_eval.parquet": {
+      "rows": 60400,
+      "sha256": "1af1613c671e9934494727389771b69c0fdf169fb7149a74afb9e42ba6878fa9"
+    }
+  }
+}
